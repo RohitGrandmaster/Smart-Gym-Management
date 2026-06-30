@@ -13,49 +13,73 @@ import {
 // ─── Data ───────────────────────────────────────────────────────────────────
 
 type MemberStatus = 'Active' | 'Pending' | 'Expired';
+type BillingCycle = '1 Month' | '3 Months' | '6 Months' | '12 Months';
+type PlanTier = 'Basic' | 'Gold' | 'Premium';
 
 interface Member {
   id: number; name: string; phone: string; email: string;
-  group: string; plan: string; status: MemberStatus;
+  billingCycle: BillingCycle; plan: PlanTier; status: MemberStatus;
   joined: string; expiry: string; address: string; branch: string;
-  gender: string; paid: string; pending: string;
+  gender: string; paidAmount: number; pendingAmount: number;
 }
 
 const initialMembers: Member[] = [
-  { id: 1, name: 'Rahul Sharma',  phone: '+91 98765 43210', email: 'rahul@gmail.com',  group: 'Monthly',   plan: 'Premium', status: 'Active',  joined: '15 Jan 2026', expiry: '15 Jan 2027', address: 'Andheri, Mumbai',  branch: 'Main Branch', gender: 'Male',   paid: '₹2,500',  pending: '₹0' },
-  { id: 2, name: 'Priya Patel',   phone: '+91 87654 32109', email: 'priya@gmail.com',  group: 'Monthly',   plan: 'Basic',   status: 'Active',  joined: '10 Feb 2026', expiry: '10 Feb 2027', address: 'Borivali, Mumbai', branch: 'Branch 2',   gender: 'Female', paid: '₹1,200',  pending: '₹0' },
-  { id: 3, name: 'Amit Kumar',    phone: '+91 76543 21098', email: 'amit@gmail.com',   group: 'Quarterly', plan: 'Gold',    status: 'Pending', joined: '08 Mar 2026', expiry: '08 Mar 2027', address: 'Powai, Mumbai',    branch: 'Main Branch', gender: 'Male',   paid: '₹900',    pending: '₹900' },
-  { id: 4, name: 'Sneha Mehta',   phone: '+91 65432 10987', email: 'sneha@gmail.com',  group: 'Monthly',   plan: 'Premium', status: 'Active',  joined: '05 Apr 2026', expiry: '05 Apr 2027', address: 'Dadar, Mumbai',    branch: 'Branch 3',   gender: 'Female', paid: '₹2,500',  pending: '₹0' },
-  { id: 5, name: 'Vijay Singh',   phone: '+91 54321 09876', email: 'vijay@gmail.com',  group: 'Monthly',   plan: 'Basic',   status: 'Expired', joined: '01 May 2025', expiry: '01 May 2026', address: 'Thane, Mumbai',    branch: 'Main Branch', gender: 'Male',   paid: '₹1,200',  pending: '₹0' },
-  { id: 6, name: 'Anita Gupta',   phone: '+91 43210 98765', email: 'anita@gmail.com',  group: 'Annually',  plan: 'Gold',    status: 'Active',  joined: '20 Jun 2026', expiry: '20 Jun 2027', address: 'Bandra, Mumbai',   branch: 'Branch 2',   gender: 'Female', paid: '₹1,800',  pending: '₹0' },
-  { id: 7, name: 'Rohit Yadav',   phone: '+91 32109 87654', email: 'rohit@gmail.com',  group: 'Annually',  plan: 'Annual',  status: 'Active',  joined: '12 Jan 2026', expiry: '12 Jan 2027', address: 'Malad, Mumbai',    branch: 'Main Branch', gender: 'Male',   paid: '₹12,000', pending: '₹0' },
-  { id: 8, name: 'Kavita Sharma', phone: '+91 21098 76543', email: 'kavita@gmail.com', group: 'Monthly',   plan: 'Basic',   status: 'Active',  joined: '25 Mar 2026', expiry: '25 Mar 2027', address: 'Goregaon, Mumbai', branch: 'Branch 3',   gender: 'Female', paid: '₹1,200',  pending: '₹0' },
+  { id: 1, name: 'Rahul Sharma',  phone: '+91 98765 43210', email: 'rahul@gmail.com',  billingCycle: '1 Month',   plan: 'Premium', status: 'Active',  joined: '15 Jan 2026', expiry: '15 Feb 2026', address: 'Andheri, Mumbai',  branch: 'Main Branch', gender: 'Male',   paidAmount: 2500,  pendingAmount: 0 },
+  { id: 2, name: 'Priya Patel',   phone: '+91 87654 32109', email: 'priya@gmail.com',  billingCycle: '3 Months',  plan: 'Basic',   status: 'Active',  joined: '10 Feb 2026', expiry: '10 May 2026', address: 'Borivali, Mumbai', branch: 'Branch 2',   gender: 'Female', paidAmount: 3000,  pendingAmount: 0 },
+  { id: 3, name: 'Amit Kumar',    phone: '+91 76543 21098', email: 'amit@gmail.com',   billingCycle: '1 Month',   plan: 'Gold',    status: 'Pending', joined: '08 Mar 2026', expiry: '08 Apr 2026', address: 'Powai, Mumbai',    branch: 'Main Branch', gender: 'Male',   paidAmount: 900,   pendingAmount: 900 },
+  { id: 4, name: 'Sneha Mehta',   phone: '+91 65432 10987', email: 'sneha@gmail.com',  billingCycle: '6 Months',  plan: 'Premium', status: 'Active',  joined: '05 Jan 2026', expiry: '05 Jul 2026', address: 'Dadar, Mumbai',    branch: 'Branch 3',   gender: 'Female', paidAmount: 12000, pendingAmount: 0 },
+  { id: 5, name: 'Vijay Singh',   phone: '+91 54321 09876', email: 'vijay@gmail.com',  billingCycle: '1 Month',   plan: 'Basic',   status: 'Expired', joined: '01 May 2025', expiry: '01 Jun 2025', address: 'Thane, Mumbai',    branch: 'Main Branch', gender: 'Male',   paidAmount: 1200,  pendingAmount: 1200 },
+  { id: 6, name: 'Anita Gupta',   phone: '+91 43210 98765', email: 'anita@gmail.com',  billingCycle: '12 Months', plan: 'Gold',    status: 'Active',  joined: '20 Jun 2026', expiry: '20 Jun 2027', address: 'Bandra, Mumbai',   branch: 'Branch 2',   gender: 'Female', paidAmount: 15000, pendingAmount: 0 },
+  { id: 7, name: 'Rohit Yadav',   phone: '+91 32109 87654', email: 'rohit@gmail.com',  billingCycle: '12 Months', plan: 'Premium', status: 'Active',  joined: '12 Jan 2026', expiry: '12 Jan 2027', address: 'Malad, Mumbai',    branch: 'Main Branch', gender: 'Male',   paidAmount: 22000, pendingAmount: 0 },
+  { id: 8, name: 'Kavita Sharma', phone: '+91 21098 76543', email: 'kavita@gmail.com', billingCycle: '3 Months',  plan: 'Basic',   status: 'Active',  joined: '25 Mar 2026', expiry: '25 Jun 2026', address: 'Goregaon, Mumbai', branch: 'Branch 3',   gender: 'Female', paidAmount: 3000,  pendingAmount: 0 },
 ];
 
-// Month-wise payment history per member (hardcoded for demo)
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const PRICING_MATRIX = {
+  Basic: { '1 Month': 1200, '3 Months': 3000, '6 Months': 5500, '12 Months': 10000 },
+  Gold: { '1 Month': 1800, '3 Months': 4500, '6 Months': 8000, '12 Months': 15000 },
+  Premium: { '1 Month': 2500, '3 Months': 6500, '6 Months': 12000, '12 Months': 22000 }
+};
 
-type PayStatus = 'Paid' | 'Due' | 'Upcoming' | 'NA';
+type PayStatus = 'Paid' | 'Due' | 'Upcoming';
 
-interface MonthPayment {
-  month: string; amount: number; status: PayStatus; date?: string; method?: string;
+interface PaymentSlot {
+  label: string; amount: number; status: PayStatus; date?: string; method?: string;
 }
 
-function getPaymentHistory(member: Member): MonthPayment[] {
-  const planAmount: Record<string, number> = { Basic: 1200, Gold: 1800, Premium: 2500, Annual: 0 };
-  const amt = planAmount[member.plan] || 1200;
+function getPaymentHistory(member: Member): PaymentSlot[] {
+  const baseAmt = PRICING_MATRIX[member.plan][member.billingCycle];
   const methods = ['UPI', 'Cash', 'Card', 'Net Banking'];
-  return MONTHS.map((month, i) => {
-    // Jan–Jun = paid history, Jul–Dec = upcoming/due based on status
-    if (i < 6) {
-      if (member.status === 'Expired' && i >= 5) return { month, amount: amt, status: 'Due' };
-      return { month, amount: amt, status: 'Paid', date: `0${i + 1 <= 9 ? i + 1 : i + 1} ${month} 2026`, method: methods[i % 4] };
-    }
-    if (member.status === 'Expired') return { month, amount: amt, status: 'Due' };
-    if (member.status === 'Pending' && i >= 6) return { month, amount: amt, status: 'Due' };
-    if (member.plan === 'Annual') return { month, amount: 0, status: 'NA' };
-    return { month, amount: amt, status: 'Upcoming' };
-  });
+  
+  if (member.billingCycle === '1 Month') {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months.map((m, i) => {
+      // Dummy logic for demo: First few months paid, current is due/pending, rest upcoming
+      if (i < 5) return { label: `${m} 2026`, amount: baseAmt, status: 'Paid', date: `05 ${m} 2026`, method: methods[i % 4] };
+      if (i === 5) return { label: `${m} 2026`, amount: baseAmt, status: member.status === 'Active' ? 'Paid' : 'Due', date: member.status === 'Active' ? `05 ${m} 2026` : undefined, method: member.status === 'Active' ? 'UPI' : undefined };
+      return { label: `${m} 2026`, amount: baseAmt, status: 'Upcoming' };
+    });
+  }
+  
+  if (member.billingCycle === '3 Months') {
+    return [
+      { label: 'Q1 (Jan-Mar)', amount: baseAmt, status: 'Paid', date: '05 Jan 2026', method: 'UPI' },
+      { label: 'Q2 (Apr-Jun)', amount: baseAmt, status: member.status === 'Active' ? 'Paid' : 'Due', date: member.status === 'Active' ? '05 Apr 2026' : undefined, method: member.status === 'Active' ? 'Card' : undefined },
+      { label: 'Q3 (Jul-Sep)', amount: baseAmt, status: 'Upcoming' },
+      { label: 'Q4 (Oct-Dec)', amount: baseAmt, status: 'Upcoming' }
+    ];
+  }
+  
+  if (member.billingCycle === '6 Months') {
+    return [
+      { label: 'H1 (Jan-Jun)', amount: baseAmt, status: 'Paid', date: '05 Jan 2026', method: 'Net Banking' },
+      { label: 'H2 (Jul-Dec)', amount: baseAmt, status: 'Upcoming' }
+    ];
+  }
+  
+  // 12 Months
+  return [
+    { label: 'Annual Dues 2026', amount: baseAmt, status: member.status === 'Pending' ? 'Due' : 'Paid', date: member.status === 'Pending' ? undefined : '05 Jan 2026', method: member.status === 'Pending' ? undefined : 'UPI' }
+  ];
 }
 
 // Attendance (current month per member)
@@ -70,18 +94,17 @@ function genAttendance(memberId: number) {
 }
 
 // ─── Message helpers ─────────────────────────────────────────────────────────
-
 function getMsgTemplate(type: 'welcome' | 'renewal' | 'due' | 'general', member: Member) {
   const map: Record<string, string> = {
     welcome: `Hi ${member.name}! 🎉\n\nWelcome to GymSmart! We're thrilled to have you as a ${member.plan} member.\n\nStart Date: ${member.joined}\nExpiry Date: ${member.expiry}\n\nLet's crush those fitness goals! 💪\n\n— Team GymSmart`,
     renewal: `Hi ${member.name}! 🔔\n\nYour ${member.plan} membership expires on ${member.expiry}.\n\nRenew today to continue your fitness journey without interruption!\n\n— Team GymSmart`,
-    due:     `Hi ${member.name} 🙏\n\nFriendly reminder: You have a pending amount of ${member.pending} on your GymSmart account.\n\nPlease clear your dues at the earliest.\n\n— Team GymSmart`,
+    due:     `Hi ${member.name} 🙏\n\nFriendly reminder: You have a pending amount of ₹${member.pendingAmount} on your GymSmart account.\n\nPlease clear your dues at the earliest.\n\n— Team GymSmart`,
     general: `Hi ${member.name}! 👋\n\nThis is a message from GymSmart. We hope you're enjoying your fitness journey!\n\n— Team GymSmart`,
   };
   return map[type];
 }
 
-const emptyForm = { name: '', email: '', phone: '', address: '', gender: 'Male', branch: 'Main Branch', group: 'Monthly', plan: 'Basic', status: 'Active' as MemberStatus };
+const emptyForm = { name: '', email: '', phone: '', address: '', gender: 'Male', branch: 'Main Branch', billingCycle: '1 Month' as BillingCycle, plan: 'Basic' as PlanTier, status: 'Active' as MemberStatus };
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -112,7 +135,7 @@ export default function Members() {
   const closeMsg = useCallback(() => setMsgModal(null), []);
 
   const openMsg = (m: Member, type: MessageType) => {
-    const tpl = m.status === 'Expired' ? 'renewal' : m.pending !== '₹0' ? 'due' : 'general';
+    const tpl = m.status === 'Expired' ? 'renewal' : m.pendingAmount > 0 ? 'due' : 'general';
     setMsgModal({
       open: true, type,
       recipient: { name: m.name, phone: m.phone, email: m.email },
@@ -125,26 +148,40 @@ export default function Members() {
   const openAdd = () => { setEditMemberId(null); setForm(emptyForm); setShowAddModal(true); };
   const openEdit = (m: Member) => {
     setEditMemberId(m.id);
-    setForm({ name: m.name, email: m.email, phone: m.phone, address: m.address, gender: m.gender, branch: m.branch, group: m.group, plan: m.plan, status: m.status });
+    setForm({ name: m.name, email: m.email, phone: m.phone, address: m.address, gender: m.gender, branch: m.branch, billingCycle: m.billingCycle, plan: m.plan, status: m.status });
     setShowAddModal(true);
   };
+
+  const calculateExpiry = (joinedStr: string, cycle: BillingCycle) => {
+    const d = new Date();
+    // Simplified calculation for demo purposes: Add days based on cycle
+    const days = cycle === '1 Month' ? 30 : cycle === '3 Months' ? 90 : cycle === '6 Months' ? 180 : 365;
+    const expiry = new Date(d.getTime() + days * 86400000);
+    return expiry.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
   const saveMember = (e: React.FormEvent) => {
     e.preventDefault();
+    const joined = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const expiry = calculateExpiry(joined, form.billingCycle);
+    const amount = PRICING_MATRIX[form.plan][form.billingCycle];
+
     if (editMemberId) {
-      setMembers(members.map(m => m.id === editMemberId ? { ...m, ...form } : m));
-      if (selectedMember?.id === editMemberId) setSelectedMember(prev => prev ? { ...prev, ...form } : prev);
+      const updated = members.map(m => m.id === editMemberId ? { ...m, ...form, paidAmount: m.status === 'Active' ? amount : m.paidAmount, pendingAmount: m.status === 'Active' ? 0 : m.pendingAmount } : m);
+      setMembers(updated);
+      if (selectedMember?.id === editMemberId) setSelectedMember(updated.find(x => x.id === editMemberId) || null);
     } else {
       const newM: Member = {
         id: Date.now(), ...form,
-        joined: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-        expiry: new Date(Date.now() + 365 * 86400000).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-        paid: form.plan === 'Basic' ? '₹1,200' : form.plan === 'Gold' ? '₹1,800' : form.plan === 'Premium' ? '₹2,500' : '₹12,000',
-        pending: '₹0',
+        joined, expiry,
+        paidAmount: form.status === 'Active' ? amount : 0,
+        pendingAmount: form.status === 'Pending' ? amount : 0,
       };
       setMembers([newM, ...members]);
     }
     setShowAddModal(false);
   };
+
   const deleteMember = (id: number) => {
     if (confirm('Delete this member?')) {
       setMembers(members.filter(m => m.id !== id));
@@ -187,6 +224,7 @@ export default function Members() {
                   <div className="flex gap-2 mt-2">
                     <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedMember.status === 'Active' ? 'bg-green-100 text-green-700' : selectedMember.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{selectedMember.status}</span>
                     <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">{selectedMember.plan}</span>
+                    <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">{selectedMember.billingCycle}</span>
                   </div>
                 </div>
               </div>
@@ -202,12 +240,12 @@ export default function Members() {
               {[
                 { label: 'Member ID', value: `GS${String(selectedMember.id).padStart(4, '0')}` },
                 { label: 'Branch', value: selectedMember.branch },
-                { label: 'Group', value: selectedMember.group },
                 { label: 'Gender', value: selectedMember.gender },
                 { label: 'Join Date', value: selectedMember.joined },
                 { label: 'Expiry Date', value: selectedMember.expiry },
                 { label: 'Address', value: selectedMember.address },
-                { label: 'Amount Paid', value: selectedMember.paid },
+                { label: 'Cycle Price', value: `₹${PRICING_MATRIX[selectedMember.plan][selectedMember.billingCycle].toLocaleString()}` },
+                { label: 'Total Paid', value: `₹${selectedMember.paidAmount.toLocaleString()}` },
               ].map((f, i) => (
                 <div key={i} className="bg-gray-50 rounded-lg p-3">
                   <p className="text-xs text-gray-500 mb-0.5">{f.label}</p>
@@ -236,15 +274,16 @@ export default function Members() {
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-4">Recent Payments</h3>
                     <div className="space-y-3">
-                      {getPaymentHistory(selectedMember).filter(p => p.status === 'Paid').slice(0, 3).map((p, i) => (
+                      {payments.filter(p => p.status === 'Paid').slice(0, 3).map((p, i) => (
                         <div key={i} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
-                          <div><p className="text-sm font-medium text-gray-900">{p.date}</p><p className="text-xs text-gray-500">{p.method}</p></div>
+                          <div><p className="text-sm font-medium text-gray-900">{p.date}</p><p className="text-xs text-gray-500">{p.method} • {p.label}</p></div>
                           <div className="text-right">
                             <p className="text-sm font-bold text-green-600">₹{p.amount.toLocaleString()}</p>
                             <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Paid</span>
                           </div>
                         </div>
                       ))}
+                      {payments.filter(p => p.status === 'Paid').length === 0 && <div className="p-3 text-sm text-gray-500 text-center border border-gray-100 rounded-lg">No recent payments</div>}
                     </div>
                   </div>
                   <div className="space-y-4">
@@ -322,8 +361,8 @@ export default function Members() {
                       <p className="text-xl font-bold text-red-600">₹{totalDue.toLocaleString()}</p>
                     </div>
                     <div className="bg-orange-50 rounded-xl p-4">
-                      <p className="text-xs text-gray-500">Plan Amount</p>
-                      <p className="text-xl font-bold text-orange-600">{selectedMember.paid}<span className="text-xs font-normal text-gray-500">/mo</span></p>
+                      <p className="text-xs text-gray-500">Cycle Price ({selectedMember.billingCycle})</p>
+                      <p className="text-xl font-bold text-orange-600">₹{PRICING_MATRIX[selectedMember.plan][selectedMember.billingCycle].toLocaleString()}</p>
                     </div>
                   </div>
 
@@ -331,14 +370,14 @@ export default function Members() {
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-gray-50">
-                        <tr>{['Month', 'Amount', 'Status', 'Date', 'Method', 'Action'].map(h => (
+                        <tr>{['Billing Slot', 'Amount', 'Status', 'Date', 'Method', 'Action'].map(h => (
                           <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">{h}</th>
                         ))}</tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {payments.map((p, i) => (
                           <tr key={i} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm font-semibold text-gray-900">{p.month} 2026</td>
+                            <td className="px-4 py-3 text-sm font-semibold text-gray-900">{p.label}</td>
                             <td className="px-4 py-3 text-sm font-medium text-gray-900">{p.amount > 0 ? `₹${p.amount.toLocaleString()}` : '—'}</td>
                             <td className="px-4 py-3">
                               <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -391,6 +430,8 @@ export default function Members() {
 
   // ── Modal renderer ──────────────────────────────────────────────────────────
   function renderModal() {
+    const calculatedPrice = PRICING_MATRIX[form.plan][form.billingCycle];
+
     return (
       <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -420,22 +461,52 @@ export default function Members() {
               ))}
             </div>
             <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: 'Gender', key: 'gender', options: ['Male', 'Female', 'Other'] },
-                { label: 'Branch', key: 'branch', options: ['Main Branch', 'Branch 2', 'Branch 3'] },
-                { label: 'Group', key: 'group', options: ['Monthly', 'Quarterly', 'Annually'] },
-                { label: 'Plan', key: 'plan', options: ['Basic', 'Gold', 'Premium', 'Annual'] },
-                { label: 'Status', key: 'status', options: ['Active', 'Pending', 'Expired'] },
-              ].map(f => (
-                <div key={f.key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-                  <select value={(form as any)[f.key]} onChange={e => setForm({ ...form, [f.key]: e.target.value })}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400">
-                    {f.options.map(o => <option key={o}>{o}</option>)}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400">
+                  {['Male', 'Female', 'Other'].map(o => <option key={o}>{o}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
+                <select value={form.branch} onChange={e => setForm({ ...form, branch: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400">
+                  {['Main Branch', 'Branch 2', 'Branch 3'].map(o => <option key={o}>{o}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl space-y-4">
+              <h3 className="text-sm font-bold text-orange-900">Membership Details</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-orange-900 mb-1">Plan Tier</label>
+                  <select value={form.plan} onChange={e => setForm({ ...form, plan: e.target.value as PlanTier })} className="w-full px-3 py-2.5 text-sm border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400">
+                    {['Basic', 'Gold', 'Premium'].map(o => <option key={o}>{o}</option>)}
                   </select>
                 </div>
-              ))}
+                <div>
+                  <label className="block text-sm font-medium text-orange-900 mb-1">Billing Cycle (Duration)</label>
+                  <select value={form.billingCycle} onChange={e => setForm({ ...form, billingCycle: e.target.value as BillingCycle })} className="w-full px-3 py-2.5 text-sm border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400">
+                    {['1 Month', '3 Months', '6 Months', '12 Months'].map(o => <option key={o}>{o}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-orange-900 mb-1">Status</label>
+                  <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value as MemberStatus })} className="w-full px-3 py-2.5 text-sm border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400">
+                    {['Active', 'Pending', 'Expired'].map(o => <option key={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-orange-900 mb-1">Calculated Price</label>
+                  <div className="w-full px-3 py-2.5 text-sm border border-orange-200 bg-white rounded-lg font-bold text-gray-900">
+                    ₹{calculatedPrice.toLocaleString()}
+                  </div>
+                </div>
+              </div>
             </div>
+
             <div className="flex gap-3 justify-end pt-2">
               <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700">Cancel</button>
               <button type="submit" className="px-4 py-2.5 text-sm text-white rounded-lg font-medium flex items-center gap-2" style={{ background: 'hsl(24 95% 53%)' }}>
@@ -481,7 +552,7 @@ export default function Members() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>{['Member', 'Contact', 'Plan', 'Status', 'Expiry', 'Dues', 'Actions'].map(h => (
+                <tr>{['Member', 'Contact', 'Plan & Cycle', 'Status', 'Expiry', 'Dues', 'Actions'].map(h => (
                   <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">{h}</th>
                 ))}</tr>
               </thead>
@@ -498,13 +569,16 @@ export default function Members() {
                       </div>
                     </td>
                     <td className="px-4 py-3"><p className="text-sm text-gray-700">{m.phone}</p><p className="text-xs text-gray-500">{m.email}</p></td>
-                    <td className="px-4 py-3"><span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">{m.plan}</span></td>
+                    <td className="px-4 py-3">
+                      <p className="text-sm font-medium text-gray-900">{m.plan}</p>
+                      <p className="text-xs text-gray-500">{m.billingCycle}</p>
+                    </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${m.status === 'Active' ? 'bg-green-100 text-green-700' : m.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{m.status}</span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">{m.expiry}</td>
                     <td className="px-4 py-3">
-                      <span className={`text-sm font-semibold ${m.pending !== '₹0' ? 'text-red-600' : 'text-green-600'}`}>{m.pending}</span>
+                      <span className={`text-sm font-semibold ${m.pendingAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>₹{m.pendingAmount}</span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1 flex-wrap">

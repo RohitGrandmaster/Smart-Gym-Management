@@ -115,10 +115,10 @@ export default function Inquiries() {
     if (!form.name || !form.phone || !form.plan) return showToast('Please fill all required fields.', 'error');
     if (editId) {
       setInquiries(inquiries.map(i => i.id === editId ? { ...i, ...form } as Inquiry : i));
-      showToast('Lead updated successfully!', 'success');
+      showToast('Lead updated successfully!', 'whatsapp');
     } else {
       setInquiries([{ id: Date.now(), ...form } as Inquiry, ...inquiries]);
-      showToast('New lead added successfully!', 'success');
+      showToast('New lead added successfully!', 'whatsapp');
     }
     setShowAddModal(false);
   };
@@ -126,16 +126,25 @@ export default function Inquiries() {
   const handleDelete = (id: number) => {
     if (confirm('Are you sure you want to delete this lead?')) {
       setInquiries(inquiries.filter(i => i.id !== id));
-      showToast('Lead deleted.', 'success');
+      showToast('Lead deleted.', 'whatsapp');
     }
   };
 
-  const handleConvert = (inq: Inquiry) => {
-    if (confirm(`Convert ${inq.name} into a Member?`)) {
-      setInquiries(inquiries.map(i => i.id === inq.id ? { ...i, status: 'Converted' } : i));
-      showToast(`${inq.name} converted to Member successfully!`, 'success');
-      // In a real app, this would also add them to the /members list via an API call.
-    }
+  // Convert Lead States
+  const [convertLead, setConvertLead] = useState<Inquiry | null>(null);
+  const [convertForm, setConvertForm] = useState({ billingCycle: '1 Month', payment: '' });
+
+  const handleConvertInit = (inq: Inquiry) => {
+    setConvertLead(inq);
+    setConvertForm({ billingCycle: '1 Month', payment: '' });
+  };
+
+  const handleConvertConfirm = () => {
+    if (!convertForm.payment) return showToast('Please enter the initial payment amount.', 'error');
+    
+    setInquiries(inquiries.map(i => i.id === convertLead?.id ? { ...i, status: 'Converted' } : i));
+    showToast(`${convertLead?.name} converted to Member! Payment of ₹${convertForm.payment} recorded.`, 'whatsapp');
+    setConvertLead(null);
   };
 
   return (
@@ -226,7 +235,7 @@ export default function Inquiries() {
                               
                               {/* Convert Button */}
                               {inq.status !== 'Converted' && (
-                                <button onClick={() => handleConvert(inq)} className="px-3 py-1.5 ml-1 text-xs font-medium rounded-lg text-white shadow-sm transition-opacity hover:opacity-90 whitespace-nowrap" style={{ background: 'hsl(24 95% 53%)' }}>
+                                <button onClick={() => handleConvertInit(inq)} className="px-3 py-1.5 ml-1 text-xs font-medium rounded-lg text-white shadow-sm transition-opacity hover:opacity-90 whitespace-nowrap" style={{ background: 'hsl(24 95% 53%)' }}>
                                   Convert
                                 </button>
                               )}
@@ -350,6 +359,41 @@ export default function Inquiries() {
               <button onClick={() => setShowAddModal(false)} className="px-4 py-2.5 text-sm font-medium border rounded-lg text-gray-700 hover:bg-gray-100">Cancel</button>
               <button onClick={handleSave} className="px-4 py-2.5 text-sm font-medium text-white rounded-lg transition-opacity hover:opacity-90" style={{ background: 'hsl(24 95% 53%)' }}>
                 {editId ? 'Save Changes' : 'Create Lead'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Convert Lead Modal ── */}
+      {convertLead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900">Convert to Member</h3>
+              <button onClick={() => setConvertLead(null)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-4 bg-gray-50/50">
+              <div className="text-sm">
+                <p><span className="text-gray-500">Name:</span> <span className="font-semibold">{convertLead.name}</span></p>
+                <p><span className="text-gray-500">Plan:</span> <span className="font-semibold">{convertLead.plan}</span></p>
+              </div>
+              <Field label="Billing Cycle" required>
+                <select className={inputCls} value={convertForm.billingCycle} onChange={(e) => setConvertForm({ ...convertForm, billingCycle: e.target.value })}>
+                  <option>1 Month</option>
+                  <option>3 Months</option>
+                  <option>6 Months</option>
+                  <option>12 Months</option>
+                </select>
+              </Field>
+              <Field label="Initial Payment Amount (₹)" required>
+                <input className={inputCls} type="number" placeholder="e.g. 2500" value={convertForm.payment} onChange={(e) => setConvertForm({ ...convertForm, payment: e.target.value })} />
+              </Field>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-white">
+              <button onClick={() => setConvertLead(null)} className="px-4 py-2.5 text-sm font-medium border rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+              <button onClick={handleConvertConfirm} className="px-4 py-2.5 text-sm font-medium text-white rounded-lg transition-opacity hover:opacity-90" style={{ background: 'hsl(24 95% 53%)' }}>
+                Confirm Payment
               </button>
             </div>
           </div>

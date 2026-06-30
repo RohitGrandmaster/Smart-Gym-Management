@@ -123,7 +123,7 @@ export default function SettingsPage() {
 
             {activeTab !== 'Gym Profile' && activeTab !== 'Membership Plans' && (
               <div className="text-center py-10 text-gray-500">
-                <s.icon size={48} className="mx-auto mb-3 text-gray-300" />
+                <Settings size={48} className="mx-auto mb-3 text-gray-300" />
                 <p>Settings for <strong>{activeTab}</strong> are currently under development.</p>
               </div>
             )}

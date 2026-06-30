@@ -7,8 +7,9 @@ import Toast, { ToastType } from '@/components/Toast';
 import {
   Plus, Search, Filter, Download, Eye, Edit, RefreshCw, ArrowUpCircle,
   X, User, MessageCircle, Mail, Trash2, CheckCircle, XCircle,
-  Calendar, CreditCard, Clock, TrendingUp, Save
+  Calendar, CreditCard, Clock, TrendingUp, Save, Printer
 } from 'lucide-react';
+import ThermalReceipt, { ReceiptData } from '@/components/ThermalReceipt';
 
 // ─── Data ───────────────────────────────────────────────────────────────────
 
@@ -128,9 +129,11 @@ export default function Members() {
     setAttendanceMap(prev => ({ ...prev, [memberId]: att }));
   };
 
-  // Messaging
+  // Messaging & Printing
   const [msgModal, setMsgModal] = useState<{ open: boolean; recipient: MessageRecipient; type: MessageType; message: string; subject?: string } | null>(null);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+  const [printData, setPrintData] = useState<ReceiptData | null>(null);
+
   const showToast = useCallback((msg: string, t: ToastType) => setToast({ message: msg, type: t }), []);
   const closeMsg = useCallback(() => setMsgModal(null), []);
 
@@ -142,6 +145,20 @@ export default function Members() {
       message: getMsgTemplate(tpl, m),
       subject: `GymSmart - ${tpl === 'renewal' ? 'Renewal Reminder' : tpl === 'due' ? 'Payment Due' : 'Message'}`,
     });
+  };
+
+  const handlePrint = (p: PaymentSlot, m: Member) => {
+    setPrintData({
+      gymName: 'GymSmart Fitness',
+      gymPhone: '+91 83479 77566',
+      receiptNo: `REC-${Date.now().toString().slice(-6)}`,
+      date: p.date || new Date().toLocaleDateString('en-IN'),
+      customerName: m.name,
+      items: [{ name: `Membership - ${m.plan} (${p.label})`, price: p.amount, amount: p.amount }],
+      total: p.amount,
+      paymentMethod: p.method || 'Cash'
+    });
+    setTimeout(() => window.print(), 100);
   };
 
   // CRUD
@@ -425,10 +442,9 @@ export default function Members() {
                                 </button>
                               )}
                               {p.status === 'Paid' && (
-                                <button onClick={() => openMsg(selectedMember, 'email')}
-                                  className="text-xs px-2.5 py-1 rounded-lg font-semibold text-white flex items-center gap-1"
-                                  style={{ background: 'hsl(217 91% 60%)' }}>
-                                  <Mail size={11} /> Receipt
+                                <button onClick={() => handlePrint(p, selectedMember)}
+                                  className="text-xs px-2.5 py-1 rounded-lg font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 flex items-center gap-1">
+                                  <Printer size={11} /> Print
                                 </button>
                               )}
                             </td>
@@ -446,6 +462,7 @@ export default function Members() {
         {msgModal && <MessageModal isOpen={msgModal.open} onClose={closeMsg} recipient={msgModal.recipient} type={msgModal.type} defaultMessage={msgModal.message} subject={msgModal.subject} onSuccess={() => showToast(`${msgModal.type === 'whatsapp' ? 'WhatsApp' : 'Email'} sent to ${msgModal.recipient.name}!`, msgModal.type)} />}
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         {showAddModal && renderModal()}
+        <ThermalReceipt data={printData} />
       </div>
     );
   }

@@ -4,7 +4,8 @@ import { useState, useCallback } from 'react';
 import Header from '@/components/Header';
 import MessageModal, { MessageType, MessageRecipient } from '@/components/MessageModal';
 import Toast, { ToastType } from '@/components/Toast';
-import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Trash2, Edit2, X, MessageCircle, Mail } from 'lucide-react';
+import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Trash2, Edit2, X, MessageCircle, Mail, Printer } from 'lucide-react';
+import ThermalReceipt, { ReceiptData } from '@/components/ThermalReceipt';
 
 const initialInvoices = [
   { id: 'INV-001', member: 'Rahul Sharma', plan: 'Premium', amount: 2500, date: '2026-06-01', status: 'Paid' },
@@ -43,11 +44,26 @@ export default function Finance() {
   const [editTxId, setEditTxId] = useState<number | null>(null);
   const [txForm, setTxForm] = useState({ type: 'Credit', desc: '', amount: '', date: '', cat: 'Misc' });
 
-  // Messaging state
+  // Messaging
   const [msgModal, setMsgModal] = useState<{ open: boolean; recipient: MessageRecipient; type: MessageType; message: string; subject?: string } | null>(null);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+  const [printData, setPrintData] = useState<ReceiptData | null>(null);
 
   const showToast = useCallback((message: string, type: ToastType) => setToast({ message, type }), []);
+
+  const handlePrint = (inv: any) => {
+    setPrintData({
+      gymName: 'GymSmart Fitness',
+      gymPhone: '+91 83479 77566',
+      receiptNo: inv.id,
+      date: inv.date,
+      customerName: inv.member,
+      items: [{ name: `Invoice - ${inv.plan}`, price: inv.amount, amount: inv.amount }],
+      total: inv.amount,
+      paymentMethod: 'Paid'
+    });
+    setTimeout(() => window.print(), 100);
+  };
   const closeMsg = useCallback(() => setMsgModal(null), []);
 
   const openInvMsg = useCallback((inv: typeof initialInvoices[0], type: MessageType) => {
@@ -216,6 +232,11 @@ export default function Finance() {
                             >
                               <Mail size={15} />
                             </button>
+                            {inv.status === 'Paid' && (
+                              <button onClick={() => handlePrint(inv)} className="p-1 rounded-lg hover:bg-gray-200 transition-colors text-gray-700" title="Print Receipt">
+                                <Printer size={15} />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -374,6 +395,7 @@ export default function Finance() {
         />
       )}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <ThermalReceipt data={printData} />
     </div>
   );
 }

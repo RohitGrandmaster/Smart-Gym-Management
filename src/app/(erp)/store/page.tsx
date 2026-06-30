@@ -364,6 +364,22 @@ function TabBtn({ label, active, onClick }: { label: string; active: boolean; on
 
 export default function Store() {
   const [tab, setTab] = useState<'Products' | 'Sales History' | 'Purchase Orders'>('Products');
+  const [printData, setPrintData] = useState<ReceiptData | null>(null);
+
+  const handlePrint = (sale: Sale) => {
+    const amt = parseFloat(sale.amount.replace(/[^0-9.]/g, '')) || 0;
+    setPrintData({
+      gymName: 'GymSmart Fitness',
+      gymPhone: '+91 83479 77566',
+      receiptNo: `SALE-${sale.id}`,
+      date: sale.date,
+      customerName: sale.customer || 'Walk-in',
+      items: [{ name: sale.product, qty: sale.qty, price: amt / sale.qty, amount: amt }],
+      total: amt,
+      paymentMethod: sale.method
+    });
+    setTimeout(() => window.print(), 100);
+  };
 
   // Products state
   const [products, setProducts] = useState<Product[]>(INIT_PRODUCTS);
@@ -653,13 +669,22 @@ export default function Store() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <button
-                            title="Delete"
-                            onClick={() => setDeleteSale(s)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              title="Print Receipt"
+                              onClick={() => handlePrint(s)}
+                              className="p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                              <Printer size={14} />
+                            </button>
+                            <button
+                              title="Delete"
+                              onClick={() => setDeleteSale(s)}
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -803,6 +828,8 @@ export default function Store() {
           onConfirm={handleDeleteOrder}
         />
       )}
+      
+      <ThermalReceipt data={printData} />
     </div>
   );
 }

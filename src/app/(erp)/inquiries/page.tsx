@@ -4,9 +4,22 @@ import { useState, useCallback } from 'react';
 import Header from '@/components/Header';
 import MessageModal, { MessageType, MessageRecipient } from '@/components/MessageModal';
 import Toast, { ToastType } from '@/components/Toast';
-import { MessageSquare, Phone, Plus, CheckCircle, Clock, MessageCircle, Mail } from 'lucide-react';
+import { MessageSquare, Phone, Plus, CheckCircle, Clock, MessageCircle, Mail, Edit2, Trash2, X } from 'lucide-react';
 
-const inquiries = [
+type LeadStatus = 'New' | 'Hot Lead' | 'Cold' | 'Follow Up' | 'Converted';
+
+interface Inquiry {
+  id: number;
+  name: string;
+  phone: string;
+  email: string;
+  source: string;
+  plan: string;
+  status: LeadStatus;
+  date: string;
+}
+
+const INIT_INQUIRIES: Inquiry[] = [
   { id: 1, name: 'Deepak Nair',     phone: '+91 90000 11111', email: 'deepak@gmail.com',  source: 'Facebook',  plan: 'Premium', status: 'Hot Lead',  date: '28 Jun 2026' },
   { id: 2, name: 'Meera Krishnan',  phone: '+91 91000 22222', email: 'meera@gmail.com',   source: 'WhatsApp',  plan: 'Gold',    status: 'Follow Up', date: '27 Jun 2026' },
   { id: 3, name: 'Sunil Patil',     phone: '+91 92000 33333', email: 'sunil@gmail.com',   source: 'Website',   plan: 'Basic',   status: 'New',       date: '26 Jun 2026' },
@@ -29,7 +42,7 @@ const integrations = [
   { name: 'IVR System',                  status: 'Inactive',  icon: '📞', desc: 'Automated phone call system for lead qualification' },
 ];
 
-function getInquiryTemplate(inq: typeof inquiries[0], type: 'followup' | 'welcome' | 'offer') {
+function getInquiryTemplate(inq: Inquiry, type: 'followup' | 'welcome' | 'offer') {
   const templates = {
     followup: `Hi ${inq.name}! 👋\n\nThank you for your interest in GymSmart! We noticed you enquired about our ${inq.plan} plan.\n\nWe'd love to have you visit us for a FREE trial session — no strings attached!\n\nCall us or just reply to this message. We're here to help you start your fitness journey! 💪\n\n— Team GymSmart`,
     welcome:  `Hi ${inq.name}! 🎉\n\nThank you for reaching out to GymSmart!\n\nWe received your inquiry about our ${inq.plan} membership. Our team will get in touch with you shortly to answer all your questions.\n\nIn the meantime, feel free to check out our website for more information.\n\n— Team GymSmart`,
@@ -38,9 +51,30 @@ function getInquiryTemplate(inq: typeof inquiries[0], type: 'followup' | 'welcom
   return templates[type];
 }
 
+// ─── Modal Components ────────────────────────────────────────────────────────
+
+const inputCls = "w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400";
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label} {required && <span className="text-red-500">*</span>}</label>
+      {children}
+    </div>
+  );
+}
+
+// ─── Page Component ─────────────────────────────────────────────────────────
+
 export default function Inquiries() {
+  const [inquiries, setInquiries] = useState<Inquiry[]>(INIT_INQUIRIES);
   const [tab, setTab] = useState('All Inquiries');
   const [statusFilter, setStatusFilter] = useState('All');
+
+  // Modal States
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [form, setForm] = useState<Partial<Inquiry>>({});
+
   const filtered = inquiries.filter(i => statusFilter === 'All' || i.status === statusFilter);
 
   // Messaging state
@@ -51,7 +85,7 @@ export default function Inquiries() {
     setToast({ message, type });
   }, []);
 
-  const openMsg = useCallback((inq: typeof inquiries[0], type: MessageType) => {
+  const openMsg = useCallback((inq: Inquiry, type: MessageType) => {
     const templateType = inq.status === 'Cold' ? 'offer' : inq.status === 'New' ? 'welcome' : 'followup';
     setMsgModal({
       open: true,
@@ -64,8 +98,48 @@ export default function Inquiries() {
 
   const closeMsg = useCallback(() => setMsgModal(null), []);
 
+  // CRUD Handlers
+  const handleOpenAdd = () => {
+    setEditId(null);
+    setForm({ name: '', phone: '', email: '', source: 'Walk-in', plan: 'Basic', status: 'New', date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) });
+    setShowAddModal(true);
+  };
+
+  const handleOpenEdit = (inq: Inquiry) => {
+    setEditId(inq.id);
+    setForm({ ...inq });
+    setShowAddModal(true);
+  };
+
+  const handleSave = () => {
+    if (!form.name || !form.phone || !form.plan) return showToast('Please fill all required fields.', 'error');
+    if (editId) {
+      setInquiries(inquiries.map(i => i.id === editId ? { ...i, ...form } as Inquiry : i));
+      showToast('Lead updated successfully!', 'success');
+    } else {
+      setInquiries([{ id: Date.now(), ...form } as Inquiry, ...inquiries]);
+      showToast('New lead added successfully!', 'success');
+    }
+    setShowAddModal(false);
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm('Are you sure you want to delete this lead?')) {
+      setInquiries(inquiries.filter(i => i.id !== id));
+      showToast('Lead deleted.', 'success');
+    }
+  };
+
+  const handleConvert = (inq: Inquiry) => {
+    if (confirm(`Convert ${inq.name} into a Member?`)) {
+      setInquiries(inquiries.map(i => i.id === inq.id ? { ...i, status: 'Converted' } : i));
+      showToast(`${inq.name} converted to Member successfully!`, 'success');
+      // In a real app, this would also add them to the /members list via an API call.
+    }
+  };
+
   return (
-    <div className="min-h-full">
+    <div className="min-h-full relative">
       <Header title="Inquiries & Lead Management" subtitle="Convert leads into loyal members — no lead left behind" />
       <div className="p-6 space-y-5">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -94,7 +168,9 @@ export default function Inquiries() {
               ))}
             </div>
             <div className="px-4 flex-shrink-0">
-              <button className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium" style={{ background: 'hsl(24 95% 53%)' }}><Plus size={15} /> Add Lead</button>
+              <button onClick={handleOpenAdd} className="flex items-center gap-2 px-4 py-2 text-sm text-white rounded-lg font-medium" style={{ background: 'hsl(24 95% 53%)' }}>
+                <Plus size={15} /> Add Lead
+              </button>
             </div>
           </div>
 
@@ -120,51 +196,55 @@ export default function Inquiries() {
                         <tr key={inq.id} className="hover:bg-gray-50">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-semibold text-sm">{inq.name.charAt(0)}</div>
+                              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-semibold text-sm flex-shrink-0">
+                                {inq.name.charAt(0)}
+                              </div>
                               <div>
                                 <p className="text-sm font-medium text-gray-900">{inq.name}</p>
                                 <p className="text-xs text-gray-500">{inq.phone}</p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3"><span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">{inq.source}</span></td>
+                          <td className="px-4 py-3"><span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full whitespace-nowrap">{inq.source}</span></td>
                           <td className="px-4 py-3 text-sm text-gray-600">{inq.plan}</td>
                           <td className="px-4 py-3">
-                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${inq.status === 'Hot Lead' ? 'bg-red-100 text-red-700' : inq.status === 'Converted' ? 'bg-green-100 text-green-700' : inq.status === 'Follow Up' ? 'bg-yellow-100 text-yellow-700' : inq.status === 'Cold' ? 'bg-gray-100 text-gray-600' : 'bg-blue-100 text-blue-700'}`}>
+                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium whitespace-nowrap ${inq.status === 'Hot Lead' ? 'bg-red-100 text-red-700' : inq.status === 'Converted' ? 'bg-green-100 text-green-700' : inq.status === 'Follow Up' ? 'bg-yellow-100 text-yellow-700' : inq.status === 'Cold' ? 'bg-gray-100 text-gray-600' : 'bg-blue-100 text-blue-700'}`}>
                               {inq.status}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-500">{inq.date}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">{inq.date}</td>
                           <td className="px-4 py-3">
-                            <div className="flex items-center gap-1">
-                              <button className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg" title="Call"><Phone size={13} /></button>
-                              {/* WhatsApp 1-Click */}
-                              <button
-                                onClick={() => openMsg(inq, 'whatsapp')}
-                                className="p-1.5 rounded-lg transition-colors hover:bg-green-50"
-                                style={{ color: '#25D366' }}
-                                title="Send WhatsApp"
-                              >
-                                <MessageCircle size={13} />
-                              </button>
-                              {/* Email 1-Click */}
-                              <button
-                                onClick={() => openMsg(inq, 'email')}
-                                className="p-1.5 rounded-lg transition-colors hover:bg-blue-50 text-blue-500"
-                                title="Send Email"
-                              >
-                                <Mail size={13} />
-                              </button>
-                              <button className="px-2 py-1 text-xs font-medium rounded-lg text-white" style={{ background: 'hsl(24 95% 53%)' }}>Convert</button>
+                            <div className="flex items-center gap-2">
+                              {/* Contact Icons */}
+                              <button onClick={() => window.location.href = `tel:${inq.phone}`} className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Call"><Phone size={14} /></button>
+                              <button onClick={() => openMsg(inq, 'whatsapp')} className="p-1.5 transition-colors hover:bg-green-50" style={{ color: '#25D366' }} title="Send WhatsApp"><MessageCircle size={14} /></button>
+                              <button onClick={() => openMsg(inq, 'email')} className="p-1.5 transition-colors hover:bg-blue-50 text-blue-500" title="Send Email"><Mail size={14} /></button>
+                              
+                              {/* Edit & Delete */}
+                              <button onClick={() => handleOpenEdit(inq)} className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit"><Edit2 size={14} /></button>
+                              <button onClick={() => handleDelete(inq.id)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete"><Trash2 size={14} /></button>
+                              
+                              {/* Convert Button */}
+                              {inq.status !== 'Converted' && (
+                                <button onClick={() => handleConvert(inq)} className="px-3 py-1.5 ml-1 text-xs font-medium rounded-lg text-white shadow-sm transition-opacity hover:opacity-90 whitespace-nowrap" style={{ background: 'hsl(24 95% 53%)' }}>
+                                  Convert
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
                       ))}
+                      {filtered.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="text-center py-8 text-gray-500">No leads found.</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
             )}
+            
             {tab === 'Social Campaign' && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
@@ -210,6 +290,71 @@ export default function Inquiries() {
           </div>
         </div>
       </div>
+
+      {/* ── Add / Edit Lead Modal ── */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900">{editId ? 'Edit Lead' : 'Add New Lead'}</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            </div>
+            <div className="p-6 overflow-y-auto space-y-4">
+              <Field label="Full Name" required>
+                <input className={inputCls} placeholder="Enter name" value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              </Field>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Phone" required>
+                  <input className={inputCls} placeholder="+91 XXXXX" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                </Field>
+                <Field label="Email">
+                  <input className={inputCls} placeholder="email@example.com" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Interest (Plan)" required>
+                  <select className={inputCls} value={form.plan || 'Basic'} onChange={(e) => setForm({ ...form, plan: e.target.value })}>
+                    <option>Basic</option>
+                    <option>Gold</option>
+                    <option>Premium</option>
+                    <option>Annual</option>
+                  </select>
+                </Field>
+                <Field label="Source">
+                  <select className={inputCls} value={form.source || 'Walk-in'} onChange={(e) => setForm({ ...form, source: e.target.value })}>
+                    <option>Walk-in</option>
+                    <option>Website</option>
+                    <option>WhatsApp</option>
+                    <option>Facebook</option>
+                    <option>Instagram</option>
+                    <option>Referral</option>
+                  </select>
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Status">
+                  <select className={inputCls} value={form.status || 'New'} onChange={(e) => setForm({ ...form, status: e.target.value as LeadStatus })}>
+                    <option>New</option>
+                    <option>Hot Lead</option>
+                    <option>Follow Up</option>
+                    <option>Cold</option>
+                    <option>Converted</option>
+                  </select>
+                </Field>
+                <Field label="Date">
+                  <input className={inputCls} value={form.date || ''} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+                </Field>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+              <button onClick={() => setShowAddModal(false)} className="px-4 py-2.5 text-sm font-medium border rounded-lg text-gray-700 hover:bg-gray-100">Cancel</button>
+              <button onClick={handleSave} className="px-4 py-2.5 text-sm font-medium text-white rounded-lg transition-opacity hover:opacity-90" style={{ background: 'hsl(24 95% 53%)' }}>
+                {editId ? 'Save Changes' : 'Create Lead'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Message Modal & Toast */}
       {msgModal && (

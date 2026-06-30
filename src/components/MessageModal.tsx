@@ -48,8 +48,17 @@ export default function MessageModal({
 
   const handleSend = async () => {
     setSending(true);
-    // Simulate API call delay
-    await new Promise((res) => setTimeout(res, 1500));
+    
+    // Actually trigger WhatsApp or Email
+    if (type === 'whatsapp') {
+      const phone = contactInfo?.replace(/\D/g, '') || ''; // strip non-digits (e.g. +91 98765 -> 9198765)
+      const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+    } else {
+      const url = `mailto:${contactInfo || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+      window.location.href = url;
+    }
+
     setSending(false);
     setSent(true);
     setTimeout(() => {
@@ -57,7 +66,7 @@ export default function MessageModal({
       setMessage(defaultMessage);
       onSuccess?.();
       onClose();
-    }, 1800);
+    }, 1500);
   };
 
   const handleClose = () => {

@@ -289,20 +289,42 @@ export default function Members() {
                   <div className="space-y-4">
                     <div className="bg-white rounded-xl border border-gray-100 p-4">
                       <h3 className="font-semibold text-gray-900 mb-3">Assigned Diet Plan</h3>
-                      <div className="p-3 border border-green-100 bg-green-50 rounded-lg">
-                        <p className="font-medium text-green-800">Muscle Gain Diet</p>
-                        <p className="text-xs text-green-600 mt-0.5">3200 kcal · 6 meals/day · 12 weeks</p>
-                      </div>
+                      {['Rahul Sharma', 'Rohit Yadav'].includes(selectedMember.name) ? (
+                        <div className="p-3 border border-green-100 bg-green-50 rounded-lg">
+                          <p className="font-medium text-green-800">{selectedMember.name === 'Rahul Sharma' ? 'Muscle Gain Diet' : 'Veg Protein Plan'}</p>
+                          <p className="text-xs text-green-600 mt-0.5">{selectedMember.name === 'Rahul Sharma' ? '3200 kcal · High Protein' : '2800 kcal · Plant-Based'}</p>
+                        </div>
+                      ) : ['Priya Patel', 'Sneha Mehta'].includes(selectedMember.name) ? (
+                        <div className="p-3 border border-green-100 bg-green-50 rounded-lg">
+                          <p className="font-medium text-green-800">{selectedMember.name === 'Priya Patel' ? 'Fat Loss Plan' : 'Maintenance Diet'}</p>
+                          <p className="text-xs text-green-600 mt-0.5">{selectedMember.name === 'Priya Patel' ? '1800 kcal · Low Carb' : '2200 kcal · Balanced'}</p>
+                        </div>
+                      ) : (
+                        <div className="p-3 border border-gray-100 bg-gray-50 rounded-lg">
+                          <p className="font-medium text-gray-700">No Diet Plan Assigned</p>
+                        </div>
+                      )}
                       <button onClick={() => openMsg(selectedMember, 'whatsapp')} className="mt-3 w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg text-white" style={{ background: '#25D366' }}>
                         <MessageCircle size={13} /> Send Diet Plan
                       </button>
                     </div>
                     <div className="bg-white rounded-xl border border-gray-100 p-4">
                       <h3 className="font-semibold text-gray-900 mb-3">Assigned Workout Plan</h3>
-                      <div className="p-3 border border-blue-100 bg-blue-50 rounded-lg">
-                        <p className="font-medium text-blue-800">Push Pull Legs</p>
-                        <p className="text-xs text-blue-600 mt-0.5">6 days/week · 75 min · Hypertrophy</p>
-                      </div>
+                      {['Rahul Sharma', 'Rohit Yadav'].includes(selectedMember.name) ? (
+                        <div className="p-3 border border-blue-100 bg-blue-50 rounded-lg">
+                          <p className="font-medium text-blue-800">{selectedMember.name === 'Rahul Sharma' ? 'Push Pull Legs' : 'Arnold Split'}</p>
+                          <p className="text-xs text-blue-600 mt-0.5">{selectedMember.name === 'Rahul Sharma' ? '6 days/week · Hypertrophy' : '6 days/week · Bodybuilding'}</p>
+                        </div>
+                      ) : ['Priya Patel'].includes(selectedMember.name) ? (
+                        <div className="p-3 border border-blue-100 bg-blue-50 rounded-lg">
+                          <p className="font-medium text-blue-800">HIIT Fat Burn</p>
+                          <p className="text-xs text-blue-600 mt-0.5">4 days/week · Cardio Focus</p>
+                        </div>
+                      ) : (
+                        <div className="p-3 border border-gray-100 bg-gray-50 rounded-lg">
+                          <p className="font-medium text-gray-700">No Workout Assigned</p>
+                        </div>
+                      )}
                       <button onClick={() => openMsg(selectedMember, 'email')} className="mt-3 w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg text-white" style={{ background: 'hsl(217 91% 60%)' }}>
                         <Mail size={13} /> Send Workout Plan
                       </button>

@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Header from '@/components/Header';
-import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Trash2, Edit2, X } from 'lucide-react';
+import MessageModal, { MessageType, MessageRecipient } from '@/components/MessageModal';
+import Toast, { ToastType } from '@/components/Toast';
+import { FileText, TrendingUp, TrendingDown, DollarSign, Plus, Trash2, Edit2, X, MessageCircle, Mail } from 'lucide-react';
 
 const initialInvoices = [
   { id: 'INV-001', member: 'Rahul Sharma', plan: 'Premium', amount: 2500, date: '2026-06-01', status: 'Paid' },
@@ -18,6 +20,14 @@ const initialTransactions = [
   { id: 4, type: 'Debit', desc: 'Staff Salaries', amount: 122000, date: '2026-06-10', cat: 'Payroll' },
 ];
 
+// Hardcoded phone/email map for demo (matches member names in invoices)
+const memberContacts: Record<string, { phone: string; email: string }> = {
+  'Rahul Sharma': { phone: '+91 98765 43210', email: 'rahul@gmail.com' },
+  'Priya Patel':  { phone: '+91 87654 32109', email: 'priya@gmail.com' },
+  'Amit Kumar':   { phone: '+91 76543 21098', email: 'amit@gmail.com'  },
+  'Sneha Mehta':  { phone: '+91 65432 10987', email: 'sneha@gmail.com' },
+};
+
 export default function Finance() {
   const [tab, setTab] = useState('Invoices');
   const [invoices, setInvoices] = useState(initialInvoices);
@@ -32,6 +42,27 @@ export default function Finance() {
   const [showTxModal, setShowTxModal] = useState(false);
   const [editTxId, setEditTxId] = useState<number | null>(null);
   const [txForm, setTxForm] = useState({ type: 'Credit', desc: '', amount: '', date: '', cat: 'Misc' });
+
+  // Messaging state
+  const [msgModal, setMsgModal] = useState<{ open: boolean; recipient: MessageRecipient; type: MessageType; message: string; subject?: string } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+
+  const showToast = useCallback((message: string, type: ToastType) => setToast({ message, type }), []);
+  const closeMsg = useCallback(() => setMsgModal(null), []);
+
+  const openInvMsg = useCallback((inv: typeof initialInvoices[0], type: MessageType) => {
+    const contact = memberContacts[inv.member] || { phone: '+91 00000 00000', email: 'member@gymsmart.in' };
+    const isPending = inv.status === 'Pending' || inv.status === 'Overdue';
+    const message = isPending
+      ? `Dear ${inv.member},\n\nThis is a gentle reminder that your ${inv.plan} membership payment of ₹${inv.amount.toLocaleString()} (${inv.id}) is ${inv.status.toLowerCase()}.\n\nKindly clear your dues at the earliest to avoid any service interruption.\n\n— Team GymSmart`
+      : `Dear ${inv.member},\n\nThank you for your payment! 🎉\n\nYour ${inv.plan} membership payment of ₹${inv.amount.toLocaleString()} has been received successfully.\nInvoice ID: ${inv.id}\nDate: ${inv.date}\n\nKeep up the great work at GymSmart! 💪\n\n— Team GymSmart`;
+    setMsgModal({
+      open: true, type,
+      recipient: { name: inv.member, phone: contact.phone, email: contact.email },
+      message,
+      subject: isPending ? `GymSmart - Payment Reminder (${inv.id})` : `GymSmart - Payment Receipt (${inv.id})`,
+    });
+  }, []);
 
   // Invoice Handlers
   const openInvoiceModal = (inv?: any) => {
@@ -164,9 +195,28 @@ export default function Finance() {
                             <option value="Overdue">Overdue</option>
                           </select>
                         </td>
-                        <td className="px-4 py-3 flex items-center gap-3">
-                          <button onClick={() => openInvoiceModal(inv)} className="text-blue-600 hover:text-blue-800"><Edit2 size={16} /></button>
-                          <button onClick={() => deleteInvoice(inv.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => openInvoiceModal(inv)} className="text-blue-600 hover:text-blue-800" title="Edit"><Edit2 size={15} /></button>
+                            <button onClick={() => deleteInvoice(inv.id)} className="text-red-500 hover:text-red-700" title="Delete"><Trash2 size={15} /></button>
+                            {/* WhatsApp: Receipt (Paid) or Reminder (Pending/Overdue) */}
+                            <button
+                              onClick={() => openInvMsg(inv, 'whatsapp')}
+                              title={inv.status === 'Paid' ? 'Send Receipt via WhatsApp' : 'Send Payment Reminder via WhatsApp'}
+                              className="p-1 rounded-lg hover:bg-green-50 transition-colors"
+                              style={{ color: '#25D366' }}
+                            >
+                              <MessageCircle size={15} />
+                            </button>
+                            {/* Email: Receipt (Paid) or Reminder (Pending/Overdue) */}
+                            <button
+                              onClick={() => openInvMsg(inv, 'email')}
+                              title={inv.status === 'Paid' ? 'Send Receipt via Email' : 'Send Payment Reminder via Email'}
+                              className="p-1 rounded-lg hover:bg-blue-50 transition-colors text-blue-500"
+                            >
+                              <Mail size={15} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -310,6 +360,20 @@ export default function Finance() {
           </div>
         </div>
       )}
+
+      {/* Message Modal & Toast */}
+      {msgModal && (
+        <MessageModal
+          isOpen={msgModal.open}
+          onClose={closeMsg}
+          recipient={msgModal.recipient}
+          type={msgModal.type}
+          defaultMessage={msgModal.message}
+          subject={msgModal.subject}
+          onSuccess={() => showToast(`${msgModal.type === 'whatsapp' ? 'WhatsApp' : 'Email'} sent to ${msgModal.recipient.name}!`, msgModal.type)}
+        />
+      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }

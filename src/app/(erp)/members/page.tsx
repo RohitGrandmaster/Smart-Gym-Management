@@ -1,25 +1,156 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Header from '@/components/Header';
-import { Plus, Search, Filter, Download, Eye, Edit, RefreshCw, ArrowUpCircle, X, User } from 'lucide-react';
+import MessageModal, { MessageType, MessageRecipient } from '@/components/MessageModal';
+import Toast, { ToastType } from '@/components/Toast';
+import {
+  Plus, Search, Filter, Download, Eye, Edit, RefreshCw, ArrowUpCircle,
+  X, User, MessageCircle, Mail, Trash2, CheckCircle, XCircle,
+  Calendar, CreditCard, Clock, TrendingUp, Save
+} from 'lucide-react';
 
-const members = [
-  { id: 1, name: 'Rahul Sharma', phone: '+91 98765 43210', email: 'rahul@gmail.com', group: 'Monthly', plan: 'Premium', status: 'Active', joined: '15 Jan 2026', expiry: '15 Jan 2027', address: 'Andheri, Mumbai', branch: 'Main Branch', gender: 'Male', paid: '₹2,500', pending: '₹0' },
-  { id: 2, name: 'Priya Patel', phone: '+91 87654 32109', email: 'priya@gmail.com', group: 'Monthly', plan: 'Basic', status: 'Active', joined: '10 Feb 2026', expiry: '10 Feb 2027', address: 'Borivali, Mumbai', branch: 'Branch 2', gender: 'Female', paid: '₹1,200', pending: '₹0' },
-  { id: 3, name: 'Amit Kumar', phone: '+91 76543 21098', email: 'amit@gmail.com', group: 'Quarterly', plan: 'Gold', status: 'Pending', joined: '08 Mar 2026', expiry: '08 Mar 2027', address: 'Powai, Mumbai', branch: 'Main Branch', gender: 'Male', paid: '₹900', pending: '₹900' },
-  { id: 4, name: 'Sneha Mehta', phone: '+91 65432 10987', email: 'sneha@gmail.com', group: 'Monthly', plan: 'Premium', status: 'Active', joined: '05 Apr 2026', expiry: '05 Apr 2027', address: 'Dadar, Mumbai', branch: 'Branch 3', gender: 'Female', paid: '₹2,500', pending: '₹0' },
-  { id: 5, name: 'Vijay Singh', phone: '+91 54321 09876', email: 'vijay@gmail.com', group: 'Monthly', plan: 'Basic', status: 'Expired', joined: '01 May 2025', expiry: '01 May 2026', address: 'Thane, Mumbai', branch: 'Main Branch', gender: 'Male', paid: '₹1,200', pending: '₹0' },
-  { id: 6, name: 'Anita Gupta', phone: '+91 43210 98765', email: 'anita@gmail.com', group: 'Annually', plan: 'Gold', status: 'Active', joined: '20 Jun 2026', expiry: '20 Jun 2027', address: 'Bandra, Mumbai', branch: 'Branch 2', gender: 'Female', paid: '₹1,800', pending: '₹0' },
-  { id: 7, name: 'Rohit Yadav', phone: '+91 32109 87654', email: 'rohit@gmail.com', group: 'Annually', plan: 'Annual', status: 'Active', joined: '12 Jan 2026', expiry: '12 Jan 2027', address: 'Malad, Mumbai', branch: 'Main Branch', gender: 'Male', paid: '₹12,000', pending: '₹0' },
-  { id: 8, name: 'Kavita Sharma', phone: '+91 21098 76543', email: 'kavita@gmail.com', group: 'Monthly', plan: 'Basic', status: 'Active', joined: '25 Mar 2026', expiry: '25 Mar 2027', address: 'Goregaon, Mumbai', branch: 'Branch 3', gender: 'Female', paid: '₹1,200', pending: '₹0' },
+// ─── Data ───────────────────────────────────────────────────────────────────
+
+type MemberStatus = 'Active' | 'Pending' | 'Expired';
+
+interface Member {
+  id: number; name: string; phone: string; email: string;
+  group: string; plan: string; status: MemberStatus;
+  joined: string; expiry: string; address: string; branch: string;
+  gender: string; paid: string; pending: string;
+}
+
+const initialMembers: Member[] = [
+  { id: 1, name: 'Rahul Sharma',  phone: '+91 98765 43210', email: 'rahul@gmail.com',  group: 'Monthly',   plan: 'Premium', status: 'Active',  joined: '15 Jan 2026', expiry: '15 Jan 2027', address: 'Andheri, Mumbai',  branch: 'Main Branch', gender: 'Male',   paid: '₹2,500',  pending: '₹0' },
+  { id: 2, name: 'Priya Patel',   phone: '+91 87654 32109', email: 'priya@gmail.com',  group: 'Monthly',   plan: 'Basic',   status: 'Active',  joined: '10 Feb 2026', expiry: '10 Feb 2027', address: 'Borivali, Mumbai', branch: 'Branch 2',   gender: 'Female', paid: '₹1,200',  pending: '₹0' },
+  { id: 3, name: 'Amit Kumar',    phone: '+91 76543 21098', email: 'amit@gmail.com',   group: 'Quarterly', plan: 'Gold',    status: 'Pending', joined: '08 Mar 2026', expiry: '08 Mar 2027', address: 'Powai, Mumbai',    branch: 'Main Branch', gender: 'Male',   paid: '₹900',    pending: '₹900' },
+  { id: 4, name: 'Sneha Mehta',   phone: '+91 65432 10987', email: 'sneha@gmail.com',  group: 'Monthly',   plan: 'Premium', status: 'Active',  joined: '05 Apr 2026', expiry: '05 Apr 2027', address: 'Dadar, Mumbai',    branch: 'Branch 3',   gender: 'Female', paid: '₹2,500',  pending: '₹0' },
+  { id: 5, name: 'Vijay Singh',   phone: '+91 54321 09876', email: 'vijay@gmail.com',  group: 'Monthly',   plan: 'Basic',   status: 'Expired', joined: '01 May 2025', expiry: '01 May 2026', address: 'Thane, Mumbai',    branch: 'Main Branch', gender: 'Male',   paid: '₹1,200',  pending: '₹0' },
+  { id: 6, name: 'Anita Gupta',   phone: '+91 43210 98765', email: 'anita@gmail.com',  group: 'Annually',  plan: 'Gold',    status: 'Active',  joined: '20 Jun 2026', expiry: '20 Jun 2027', address: 'Bandra, Mumbai',   branch: 'Branch 2',   gender: 'Female', paid: '₹1,800',  pending: '₹0' },
+  { id: 7, name: 'Rohit Yadav',   phone: '+91 32109 87654', email: 'rohit@gmail.com',  group: 'Annually',  plan: 'Annual',  status: 'Active',  joined: '12 Jan 2026', expiry: '12 Jan 2027', address: 'Malad, Mumbai',    branch: 'Main Branch', gender: 'Male',   paid: '₹12,000', pending: '₹0' },
+  { id: 8, name: 'Kavita Sharma', phone: '+91 21098 76543', email: 'kavita@gmail.com', group: 'Monthly',   plan: 'Basic',   status: 'Active',  joined: '25 Mar 2026', expiry: '25 Mar 2027', address: 'Goregaon, Mumbai', branch: 'Branch 3',   gender: 'Female', paid: '₹1,200',  pending: '₹0' },
 ];
 
+// Month-wise payment history per member (hardcoded for demo)
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+type PayStatus = 'Paid' | 'Due' | 'Upcoming' | 'NA';
+
+interface MonthPayment {
+  month: string; amount: number; status: PayStatus; date?: string; method?: string;
+}
+
+function getPaymentHistory(member: Member): MonthPayment[] {
+  const planAmount: Record<string, number> = { Basic: 1200, Gold: 1800, Premium: 2500, Annual: 0 };
+  const amt = planAmount[member.plan] || 1200;
+  const methods = ['UPI', 'Cash', 'Card', 'Net Banking'];
+  return MONTHS.map((month, i) => {
+    // Jan–Jun = paid history, Jul–Dec = upcoming/due based on status
+    if (i < 6) {
+      if (member.status === 'Expired' && i >= 5) return { month, amount: amt, status: 'Due' };
+      return { month, amount: amt, status: 'Paid', date: `0${i + 1 <= 9 ? i + 1 : i + 1} ${month} 2026`, method: methods[i % 4] };
+    }
+    if (member.status === 'Expired') return { month, amount: amt, status: 'Due' };
+    if (member.status === 'Pending' && i >= 6) return { month, amount: amt, status: 'Due' };
+    if (member.plan === 'Annual') return { month, amount: 0, status: 'NA' };
+    return { month, amount: amt, status: 'Upcoming' };
+  });
+}
+
+// Attendance (current month per member)
+function genAttendance(memberId: number) {
+  const days = 30;
+  const seed = memberId * 7;
+  return Array.from({ length: days }, (_, i) => {
+    const d = i + 1;
+    const rand = (seed + d * 13 + d * d) % 10;
+    return { day: d, status: rand < 7 ? 'P' : rand < 9 ? 'A' : 'L' as 'P' | 'A' | 'L' };
+  });
+}
+
+// ─── Message helpers ─────────────────────────────────────────────────────────
+
+function getMsgTemplate(type: 'welcome' | 'renewal' | 'due' | 'general', member: Member) {
+  const map: Record<string, string> = {
+    welcome: `Hi ${member.name}! 🎉\n\nWelcome to GymSmart! We're thrilled to have you as a ${member.plan} member.\n\nStart Date: ${member.joined}\nExpiry Date: ${member.expiry}\n\nLet's crush those fitness goals! 💪\n\n— Team GymSmart`,
+    renewal: `Hi ${member.name}! 🔔\n\nYour ${member.plan} membership expires on ${member.expiry}.\n\nRenew today to continue your fitness journey without interruption!\n\n— Team GymSmart`,
+    due:     `Hi ${member.name} 🙏\n\nFriendly reminder: You have a pending amount of ${member.pending} on your GymSmart account.\n\nPlease clear your dues at the earliest.\n\n— Team GymSmart`,
+    general: `Hi ${member.name}! 👋\n\nThis is a message from GymSmart. We hope you're enjoying your fitness journey!\n\n— Team GymSmart`,
+  };
+  return map[type];
+}
+
+const emptyForm = { name: '', email: '', phone: '', address: '', gender: 'Male', branch: 'Main Branch', group: 'Monthly', plan: 'Basic', status: 'Active' as MemberStatus };
+
+// ─── Component ───────────────────────────────────────────────────────────────
+
 export default function Members() {
+  const [members, setMembers] = useState<Member[]>(initialMembers);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [showModal, setShowModal] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<typeof members[0] | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editMemberId, setEditMemberId] = useState<number | null>(null);
+  const [form, setForm] = useState(emptyForm);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [profileTab, setProfileTab] = useState<'overview' | 'attendance' | 'payments'>('overview');
+
+  // Attendance state
+  const [attendanceMap, setAttendanceMap] = useState<Record<number, { day: number; status: string }[]>>({});
+  const getAttendance = (id: number) => attendanceMap[id] || genAttendance(id);
+  const toggleAtt = (memberId: number, day: number) => {
+    const att = getAttendance(memberId).map(a =>
+      a.day === day ? { ...a, status: a.status === 'P' ? 'A' : a.status === 'A' ? 'L' : 'P' } : a
+    );
+    setAttendanceMap(prev => ({ ...prev, [memberId]: att }));
+  };
+
+  // Messaging
+  const [msgModal, setMsgModal] = useState<{ open: boolean; recipient: MessageRecipient; type: MessageType; message: string; subject?: string } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+  const showToast = useCallback((msg: string, t: ToastType) => setToast({ message: msg, type: t }), []);
+  const closeMsg = useCallback(() => setMsgModal(null), []);
+
+  const openMsg = (m: Member, type: MessageType) => {
+    const tpl = m.status === 'Expired' ? 'renewal' : m.pending !== '₹0' ? 'due' : 'general';
+    setMsgModal({
+      open: true, type,
+      recipient: { name: m.name, phone: m.phone, email: m.email },
+      message: getMsgTemplate(tpl, m),
+      subject: `GymSmart - ${tpl === 'renewal' ? 'Renewal Reminder' : tpl === 'due' ? 'Payment Due' : 'Message'}`,
+    });
+  };
+
+  // CRUD
+  const openAdd = () => { setEditMemberId(null); setForm(emptyForm); setShowAddModal(true); };
+  const openEdit = (m: Member) => {
+    setEditMemberId(m.id);
+    setForm({ name: m.name, email: m.email, phone: m.phone, address: m.address, gender: m.gender, branch: m.branch, group: m.group, plan: m.plan, status: m.status });
+    setShowAddModal(true);
+  };
+  const saveMember = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editMemberId) {
+      setMembers(members.map(m => m.id === editMemberId ? { ...m, ...form } : m));
+      if (selectedMember?.id === editMemberId) setSelectedMember(prev => prev ? { ...prev, ...form } : prev);
+    } else {
+      const newM: Member = {
+        id: Date.now(), ...form,
+        joined: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+        expiry: new Date(Date.now() + 365 * 86400000).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+        paid: form.plan === 'Basic' ? '₹1,200' : form.plan === 'Gold' ? '₹1,800' : form.plan === 'Premium' ? '₹2,500' : '₹12,000',
+        pending: '₹0',
+      };
+      setMembers([newM, ...members]);
+    }
+    setShowAddModal(false);
+  };
+  const deleteMember = (id: number) => {
+    if (confirm('Delete this member?')) {
+      setMembers(members.filter(m => m.id !== id));
+      if (selectedMember?.id === id) setSelectedMember(null);
+    }
+  };
 
   const filtered = members.filter(m => {
     const ms = m.name.toLowerCase().includes(search.toLowerCase()) || m.phone.includes(search);
@@ -27,24 +158,46 @@ export default function Members() {
     return ms && mf;
   });
 
+  // ── Profile view ─────────────────────────────────────────────────────────
   if (selectedMember) {
+    const att = getAttendance(selectedMember.id);
+    const presentDays = att.filter(a => a.status === 'P').length;
+    const absentDays = att.filter(a => a.status === 'A').length;
+    const leaveDays = att.filter(a => a.status === 'L').length;
+    const attPct = Math.round((presentDays / att.length) * 100);
+
+    const payments = getPaymentHistory(selectedMember);
+    const totalDue = payments.filter(p => p.status === 'Due').reduce((s, p) => s + p.amount, 0);
+    const totalPaid = payments.filter(p => p.status === 'Paid').reduce((s, p) => s + p.amount, 0);
+
     return (
       <div className="min-h-full">
         <Header title="Member Profile" subtitle={`Viewing profile of ${selectedMember.name}`} />
         <div className="p-6 space-y-5">
           <button onClick={() => setSelectedMember(null)} className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1.5">← Back to Members</button>
+
+          {/* Profile Card */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center gap-5 mb-6">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold text-white" style={{ background: 'hsl(24 95% 53%)' }}>{selectedMember.name.charAt(0)}</div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">{selectedMember.name}</h2>
-                <p className="text-gray-500">{selectedMember.email} · {selectedMember.phone}</p>
-                <div className="flex gap-2 mt-2">
-                  <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedMember.status === 'Active' ? 'bg-green-100 text-green-700' : selectedMember.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{selectedMember.status}</span>
-                  <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">{selectedMember.plan}</span>
+            <div className="flex flex-wrap items-center justify-between gap-5 mb-6">
+              <div className="flex items-center gap-5">
+                <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold text-white" style={{ background: 'hsl(24 95% 53%)' }}>{selectedMember.name.charAt(0)}</div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">{selectedMember.name}</h2>
+                  <p className="text-gray-500 text-sm">{selectedMember.email} · {selectedMember.phone}</p>
+                  <div className="flex gap-2 mt-2">
+                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedMember.status === 'Active' ? 'bg-green-100 text-green-700' : selectedMember.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{selectedMember.status}</span>
+                    <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">{selectedMember.plan}</span>
+                  </div>
                 </div>
               </div>
+              <div className="flex gap-2 flex-wrap">
+                <button onClick={() => openEdit(selectedMember)} className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-700"><Edit size={14} /> Edit</button>
+                <button onClick={() => openMsg(selectedMember, 'whatsapp')} className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white rounded-xl" style={{ background: '#25D366' }}><MessageCircle size={14} /> WhatsApp</button>
+                <button onClick={() => openMsg(selectedMember, 'email')} className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white rounded-xl" style={{ background: 'hsl(217 91% 60%)' }}><Mail size={14} /> Email</button>
+              </div>
             </div>
+
+            {/* Info grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: 'Member ID', value: `GS${String(selectedMember.id).padStart(4, '0')}` },
@@ -63,51 +216,244 @@ export default function Members() {
               ))}
             </div>
           </div>
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-              <h3 className="font-semibold text-gray-900 mb-4">Payment History</h3>
-              <div className="space-y-3">
-                {[
-                  { date: '15 Jan 2026', amount: selectedMember.paid, method: 'UPI', status: 'Paid' },
-                  { date: '15 Dec 2025', amount: selectedMember.paid, method: 'Cash', status: 'Paid' },
-                  { date: '15 Nov 2025', amount: selectedMember.paid, method: 'Card', status: 'Paid' },
-                ].map((p, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
-                    <div><p className="text-sm font-medium text-gray-900">{p.date}</p><p className="text-xs text-gray-500">{p.method}</p></div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-green-600">{p.amount}</p>
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{p.status}</span>
+
+          {/* Sub Tabs */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="flex border-b border-gray-100">
+              {([['overview', 'Overview'], ['attendance', 'Attendance'], ['payments', 'Payment History']] as [typeof profileTab, string][]).map(([t, label]) => (
+                <button key={t} onClick={() => setProfileTab(t)}
+                  className={`px-5 py-3.5 text-sm font-medium transition-colors border-b-2 ${profileTab === t ? 'text-orange-600 bg-orange-50' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                  style={profileTab === t ? { borderBottomColor: 'hsl(24 95% 53%)' } : {}}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-5">
+              {/* ── Overview ── */}
+              {profileTab === 'overview' && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-4">Recent Payments</h3>
+                    <div className="space-y-3">
+                      {getPaymentHistory(selectedMember).filter(p => p.status === 'Paid').slice(0, 3).map((p, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
+                          <div><p className="text-sm font-medium text-gray-900">{p.date}</p><p className="text-xs text-gray-500">{p.method}</p></div>
+                          <div className="text-right">
+                            <p className="text-sm font-bold text-green-600">₹{p.amount.toLocaleString()}</p>
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Paid</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-5">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                <h3 className="font-semibold text-gray-900 mb-3">Assigned Diet Plan</h3>
-                <div className="p-3 border border-green-100 bg-green-50 rounded-lg">
-                  <p className="font-medium text-green-800">Muscle Gain Diet</p>
-                  <p className="text-xs text-green-600 mt-0.5">3200 kcal · 6 meals/day · 12 weeks</p>
+                  <div className="space-y-4">
+                    <div className="bg-white rounded-xl border border-gray-100 p-4">
+                      <h3 className="font-semibold text-gray-900 mb-3">Assigned Diet Plan</h3>
+                      <div className="p-3 border border-green-100 bg-green-50 rounded-lg">
+                        <p className="font-medium text-green-800">Muscle Gain Diet</p>
+                        <p className="text-xs text-green-600 mt-0.5">3200 kcal · 6 meals/day · 12 weeks</p>
+                      </div>
+                      <button onClick={() => openMsg(selectedMember, 'whatsapp')} className="mt-3 w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg text-white" style={{ background: '#25D366' }}>
+                        <MessageCircle size={13} /> Send Diet Plan
+                      </button>
+                    </div>
+                    <div className="bg-white rounded-xl border border-gray-100 p-4">
+                      <h3 className="font-semibold text-gray-900 mb-3">Assigned Workout Plan</h3>
+                      <div className="p-3 border border-blue-100 bg-blue-50 rounded-lg">
+                        <p className="font-medium text-blue-800">Push Pull Legs</p>
+                        <p className="text-xs text-blue-600 mt-0.5">6 days/week · 75 min · Hypertrophy</p>
+                      </div>
+                      <button onClick={() => openMsg(selectedMember, 'email')} className="mt-3 w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg text-white" style={{ background: 'hsl(217 91% 60%)' }}>
+                        <Mail size={13} /> Send Workout Plan
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                <h3 className="font-semibold text-gray-900 mb-3">Assigned Workout Plan</h3>
-                <div className="p-3 border border-blue-100 bg-blue-50 rounded-lg">
-                  <p className="font-medium text-blue-800">Push Pull Legs</p>
-                  <p className="text-xs text-blue-600 mt-0.5">6 days/week · 75 min · Hypertrophy</p>
+              )}
+
+              {/* ── Attendance ── */}
+              {profileTab === 'attendance' && (
+                <div>
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                    {[
+                      { label: 'Present', value: presentDays, color: 'text-green-600', bg: 'bg-green-50' },
+                      { label: 'Absent', value: absentDays, color: 'text-red-600', bg: 'bg-red-50' },
+                      { label: 'Leave', value: leaveDays, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+                      { label: 'Attendance %', value: `${attPct}%`, color: attPct >= 75 ? 'text-green-600' : 'text-red-600', bg: 'bg-gray-50' },
+                    ].map((s, i) => (
+                      <div key={i} className={`${s.bg} rounded-xl p-4`}>
+                        <p className="text-xs text-gray-500 mb-1">{s.label}</p>
+                        <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400 mb-3">Click a day to toggle: 🟢 Present → 🔴 Absent → 🟡 Leave</p>
+                  {/* Calendar grid */}
+                  <div className="grid grid-cols-7 gap-1.5 sm:grid-cols-10">
+                    {att.map(({ day, status }) => (
+                      <button key={day} onClick={() => toggleAtt(selectedMember.id, day)}
+                        title={`Day ${day}: ${status === 'P' ? 'Present' : status === 'A' ? 'Absent' : 'Leave'}`}
+                        className={`h-10 w-full rounded-lg flex items-center justify-center text-xs font-bold transition-all hover:scale-110 ${status === 'P' ? 'bg-green-100 text-green-700 hover:bg-green-200' : status === 'A' ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'}`}>
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-4 mt-4 text-xs text-gray-500">
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-green-200 inline-block" />Present</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-red-200 inline-block" />Absent</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-yellow-200 inline-block" />Leave</span>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* ── Payment History ── */}
+              {profileTab === 'payments' && (
+                <div>
+                  {/* Summary */}
+                  <div className="grid grid-cols-3 gap-4 mb-5">
+                    <div className="bg-green-50 rounded-xl p-4">
+                      <p className="text-xs text-gray-500">Total Paid</p>
+                      <p className="text-xl font-bold text-green-600">₹{totalPaid.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-red-50 rounded-xl p-4">
+                      <p className="text-xs text-gray-500">Total Due</p>
+                      <p className="text-xl font-bold text-red-600">₹{totalDue.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-orange-50 rounded-xl p-4">
+                      <p className="text-xs text-gray-500">Plan Amount</p>
+                      <p className="text-xl font-bold text-orange-600">{selectedMember.paid}<span className="text-xs font-normal text-gray-500">/mo</span></p>
+                    </div>
+                  </div>
+
+                  {/* Month-wise table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>{['Month', 'Amount', 'Status', 'Date', 'Method', 'Action'].map(h => (
+                          <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">{h}</th>
+                        ))}</tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {payments.map((p, i) => (
+                          <tr key={i} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm font-semibold text-gray-900">{p.month} 2026</td>
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900">{p.amount > 0 ? `₹${p.amount.toLocaleString()}` : '—'}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                p.status === 'Paid' ? 'bg-green-100 text-green-700' :
+                                p.status === 'Due' ? 'bg-red-100 text-red-700' :
+                                p.status === 'Upcoming' ? 'bg-blue-100 text-blue-700' :
+                                'bg-gray-100 text-gray-500'
+                              }`}>
+                                {p.status === 'Paid' && <CheckCircle size={10} />}
+                                {p.status === 'Due' && <XCircle size={10} />}
+                                {p.status === 'Upcoming' && <Clock size={10} />}
+                                {p.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500">{p.date || '—'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-500">{p.method || '—'}</td>
+                            <td className="px-4 py-3">
+                              {p.status === 'Due' && (
+                                <button onClick={() => openMsg(selectedMember, 'whatsapp')}
+                                  className="text-xs px-2.5 py-1 rounded-lg font-semibold text-white flex items-center gap-1"
+                                  style={{ background: '#25D366' }}>
+                                  <MessageCircle size={11} /> Remind
+                                </button>
+                              )}
+                              {p.status === 'Paid' && (
+                                <button onClick={() => openMsg(selectedMember, 'email')}
+                                  className="text-xs px-2.5 py-1 rounded-lg font-semibold text-white flex items-center gap-1"
+                                  style={{ background: 'hsl(217 91% 60%)' }}>
+                                  <Mail size={11} /> Receipt
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
+        </div>
+
+        {msgModal && <MessageModal isOpen={msgModal.open} onClose={closeMsg} recipient={msgModal.recipient} type={msgModal.type} defaultMessage={msgModal.message} subject={msgModal.subject} onSuccess={() => showToast(`${msgModal.type === 'whatsapp' ? 'WhatsApp' : 'Email'} sent to ${msgModal.recipient.name}!`, msgModal.type)} />}
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+        {showAddModal && renderModal()}
+      </div>
+    );
+  }
+
+  // ── Modal renderer ──────────────────────────────────────────────────────────
+  function renderModal() {
+    return (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+            <h2 className="font-bold text-gray-900 text-lg">{editMemberId ? 'Edit Member' : 'Add New Member'}</h2>
+            <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><X size={17} /></button>
+          </div>
+          <form onSubmit={saveMember} className="p-6 space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
+                <User size={22} className="text-gray-400" />
+              </div>
+              <div><p className="text-sm font-medium text-gray-700">Profile Photo</p><button type="button" className="text-xs text-orange-500 mt-1 hover:underline">Upload Photo</button></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: 'Full Name *', key: 'name', type: 'text', req: true },
+                { label: 'Mobile No. *', key: 'phone', type: 'tel', req: true },
+                { label: 'Email', key: 'email', type: 'email', req: false },
+                { label: 'Address', key: 'address', type: 'text', req: false },
+              ].map(f => (
+                <div key={f.key}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
+                  <input required={f.req} type={f.type} value={(form as any)[f.key]} onChange={e => setForm({ ...form, [f.key]: e.target.value })}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: 'Gender', key: 'gender', options: ['Male', 'Female', 'Other'] },
+                { label: 'Branch', key: 'branch', options: ['Main Branch', 'Branch 2', 'Branch 3'] },
+                { label: 'Group', key: 'group', options: ['Monthly', 'Quarterly', 'Annually'] },
+                { label: 'Plan', key: 'plan', options: ['Basic', 'Gold', 'Premium', 'Annual'] },
+                { label: 'Status', key: 'status', options: ['Active', 'Pending', 'Expired'] },
+              ].map(f => (
+                <div key={f.key}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
+                  <select value={(form as any)[f.key]} onChange={e => setForm({ ...form, [f.key]: e.target.value })}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400">
+                    {f.options.map(o => <option key={o}>{o}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3 justify-end pt-2">
+              <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700">Cancel</button>
+              <button type="submit" className="px-4 py-2.5 text-sm text-white rounded-lg font-medium flex items-center gap-2" style={{ background: 'hsl(24 95% 53%)' }}>
+                <Save size={15} />{editMemberId ? 'Update Member' : 'Add Member'}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     );
   }
 
+  // ── Main List ───────────────────────────────────────────────────────────────
   return (
     <div className="min-h-full">
-      <Header title="Member Management" subtitle="Manage all gym members, plans, and payments" />
+      <Header title="Member Management" subtitle="Manage all gym members, plans, attendance, and payments" />
       <div className="p-6 space-y-5">
+        {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
             <div className="flex gap-3 flex-1 flex-wrap">
@@ -120,30 +466,24 @@ export default function Members() {
                 className="px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400">
                 <option>All</option><option>Active</option><option>Pending</option><option>Expired</option>
               </select>
-              <button className="flex items-center gap-2 px-4 py-2.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600">
-                <Filter size={15} /> Filter
-              </button>
             </div>
             <div className="flex gap-2">
-              <button className="flex items-center gap-2 px-4 py-2.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600">
-                <Download size={15} /> Export CSV
-              </button>
-              <button onClick={() => setShowModal(true)} className="flex items-center gap-2 px-4 py-2.5 text-sm text-white rounded-lg font-medium transition-colors" style={{ background: 'hsl(24 95% 53%)' }}>
+              <button className="flex items-center gap-2 px-4 py-2.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600"><Download size={15} /> Export CSV</button>
+              <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2.5 text-sm text-white rounded-lg font-medium" style={{ background: 'hsl(24 95% 53%)' }}>
                 <Plus size={15} /> Add Member
               </button>
             </div>
           </div>
         </div>
 
+        {/* Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  {['Member', 'Contact', 'Group', 'Address', 'Branch', 'Gender', 'Status', 'Actions'].map(h => (
-                    <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">{h}</th>
-                  ))}
-                </tr>
+                <tr>{['Member', 'Contact', 'Plan', 'Status', 'Expiry', 'Dues', 'Actions'].map(h => (
+                  <th key={h} className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-3">{h}</th>
+                ))}</tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filtered.map(m => (
@@ -158,23 +498,28 @@ export default function Members() {
                       </div>
                     </td>
                     <td className="px-4 py-3"><p className="text-sm text-gray-700">{m.phone}</p><p className="text-xs text-gray-500">{m.email}</p></td>
-                    <td className="px-4 py-3"><span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">{m.group}</span></td>
-                    <td className="px-4 py-3 text-sm text-gray-600 max-w-[120px] truncate">{m.address}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{m.branch}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{m.gender}</td>
+                    <td className="px-4 py-3"><span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">{m.plan}</span></td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${m.status === 'Active' ? 'bg-green-100 text-green-700' : m.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{m.status}</span>
                     </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{m.expiry}</td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => setSelectedMember(m)} title="View Profile" className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"><Eye size={14} /></button>
-                        <button title="Edit" className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg"><Edit size={14} /></button>
-                        <button title="Renew" className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg"><RefreshCw size={14} /></button>
-                        <button title="Upgrade" className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg"><ArrowUpCircle size={14} /></button>
+                      <span className={`text-sm font-semibold ${m.pending !== '₹0' ? 'text-red-600' : 'text-green-600'}`}>{m.pending}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <button onClick={() => { setSelectedMember(m); setProfileTab('overview'); }} title="View Profile" className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"><Eye size={14} /></button>
+                        <button onClick={() => openEdit(m)} title="Edit" className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg"><Edit size={14} /></button>
+                        <button onClick={() => { setSelectedMember(m); setProfileTab('attendance'); }} title="Attendance" className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg"><Calendar size={14} /></button>
+                        <button onClick={() => { setSelectedMember(m); setProfileTab('payments'); }} title="Payment History" className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg"><CreditCard size={14} /></button>
+                        <button onClick={() => openMsg(m, 'whatsapp')} title="WhatsApp" className="p-1.5 rounded-lg hover:bg-green-50" style={{ color: '#25D366' }}><MessageCircle size={14} /></button>
+                        <button onClick={() => openMsg(m, 'email')} title="Email" className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500"><Mail size={14} /></button>
+                        <button onClick={() => deleteMember(m.id)} title="Delete" className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={14} /></button>
                       </div>
                     </td>
                   </tr>
                 ))}
+                {filtered.length === 0 && <tr><td colSpan={7} className="text-center py-8 text-gray-500">No members found.</td></tr>}
               </tbody>
             </table>
           </div>
@@ -189,57 +534,9 @@ export default function Members() {
         </div>
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
-              <h2 className="font-bold text-gray-900 text-lg">Add New Member</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><X size={17} /></button>
-            </div>
-            <div className="p-6 space-y-5">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300 cursor-pointer hover:bg-gray-50">
-                  <User size={22} className="text-gray-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Profile Photo</p>
-                  <button className="text-xs text-orange-500 mt-1 hover:underline">Upload Photo</button>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: 'Full Name', placeholder: 'Full name', required: true },
-                  { label: 'Alternate Name', placeholder: 'Alternate / nickname' },
-                  { label: 'Email', placeholder: 'email@example.com', type: 'email' },
-                  { label: 'Mobile No.', placeholder: '+91 XXXXX XXXXX', type: 'tel', required: true },
-                  { label: 'Alternate Mobile', placeholder: 'Alternate number', type: 'tel' },
-                  { label: 'Occupation', placeholder: 'e.g. Software Engineer' },
-                  { label: 'GST No.', placeholder: 'GST number (optional)' },
-                ].map((f, i) => (
-                  <div key={i}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{f.label} {f.required && <span className="text-red-500">*</span>}</label>
-                    <input type={f.type || 'text'} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder={f.placeholder} />
-                  </div>
-                ))}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <textarea rows={2} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400" placeholder="Full address"></textarea>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Membership Plan</label>
-                <select className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400">
-                  <option>Basic - ₹1,200/month</option><option>Gold - ₹1,800/month</option><option>Premium - ₹2,500/month</option><option>Annual - ₹12,000/year</option>
-                </select>
-              </div>
-            </div>
-            <div className="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end sticky bottom-0 bg-white">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700">Cancel</button>
-              <button className="px-4 py-2.5 text-sm text-white rounded-lg font-medium" style={{ background: 'hsl(24 95% 53%)' }}>Add Member</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showAddModal && renderModal()}
+      {msgModal && <MessageModal isOpen={msgModal.open} onClose={closeMsg} recipient={msgModal.recipient} type={msgModal.type} defaultMessage={msgModal.message} subject={msgModal.subject} onSuccess={() => showToast(`${msgModal.type === 'whatsapp' ? 'WhatsApp' : 'Email'} sent to ${msgModal.recipient.name}!`, msgModal.type)} />}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }

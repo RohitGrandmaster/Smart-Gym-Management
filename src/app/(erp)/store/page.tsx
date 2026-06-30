@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Header from '@/components/Header';
+import ThermalReceipt, { ReceiptData } from '@/components/ThermalReceipt';
 import {
   Plus, ShoppingCart, Package, TrendingUp, AlertTriangle,
-  X, Edit2, Trash2,
+  X, Edit2, Trash2, Printer,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────

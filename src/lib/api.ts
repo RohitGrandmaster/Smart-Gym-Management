@@ -4,7 +4,10 @@
  * Base URL: http://localhost:5000/api
  */
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+let BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+if (!BASE_URL.endsWith('/api')) {
+  BASE_URL = BASE_URL.replace(/\/$/, '') + '/api';
+}
 
 // ─── User Helper (reads from non-HttpOnly cookie set by server) ───────────────
 

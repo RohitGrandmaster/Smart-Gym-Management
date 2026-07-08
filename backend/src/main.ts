@@ -60,7 +60,7 @@ async function bootstrap() {
   });
 
   const port = process.env.PORT || 5000;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
   console.log(`\n🏋️  GymSmart Backend is running!`);
   console.log(`🚀  API:     http://localhost:${port}/api`);

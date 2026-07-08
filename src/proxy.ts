@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 const PUBLIC_ROUTES = ['/', '/login'];
 const ERP_PREFIX = ['/dashboard', '/members', '/plans', '/finance', '/hr', '/attendance', '/store', '/workout', '/inquiries', '/settings'];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('gymsmart_token')?.value;
 

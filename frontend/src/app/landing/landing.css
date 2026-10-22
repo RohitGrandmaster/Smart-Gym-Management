@@ -1,0 +1,115 @@
+/*
+ * RESPONSIBILITY: Module-scoped CSS for the Landing (Public Marketing) page.
+ * Defines CSS custom properties local to .landing-module, gradient utility classes
+ * for service/trainer cards (mapped from design system tokens), and animation helpers.
+ *
+ * Global tokens (--primary, --success, etc.) are defined in globals.css.
+ * This file maps those tokens into landing-specific aliases and static gradient classes
+ * so that JSX components never need dynamic Tailwind class strings or arbitrary hex values.
+ *
+ * Loaded via: LandingMain.tsx → import '@/app/landing/landing.css'
+ */
+
+/* ─── Landing Module Theme Tokens ─────────────────────────────────────────── */
+
+.landing-module {
+  /* Common backgrounds */
+  --landing-bg-dark: #0a0a0a;
+  --landing-bg-darker: #0f0f0f;
+  --landing-bg-card: rgba(255, 255, 255, 0.05);
+  --landing-bg-input: rgba(0, 0, 0, 0.5);
+
+  /* Booking section gradient (replaces arbitrary to-[#1a1a1a]) */
+  --landing-booking-bg: linear-gradient(135deg, var(--background) 0%, #1a1a1a 100%);
+
+  /* Text colors */
+  --landing-text-primary: #ffffff;
+  --landing-text-secondary: #9ca3af;
+  --landing-text-muted: #6b7280;
+
+  /* Borders */
+  --landing-border: rgba(255, 255, 255, 0.1);
+
+  /* Highlights mapped to Global Design System (Gold) */
+  --landing-highlight-orange: var(--primary);
+  --landing-highlight-gradient: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  --landing-text-gradient: linear-gradient(135deg, var(--primary), var(--primary-hover));
+}
+
+/* ─── Booking Section Background ─────────────────────────────────────────── */
+/* Replaces bg-gradient-to-br from-background to-[#1a1a1a] (Violation 7) */
+
+.landing-booking-section {
+  background: var(--landing-booking-bg);
+}
+
+/* ─── Service Card Icon Gradients (Violation 1 & 10) ─────────────────────── */
+/*
+ * These replace dynamic Tailwind class strings like `bg-gradient-to-br from-orange-500 to-red-600`
+ * which cannot be purged by Tailwind when constructed dynamically.
+ * Each class maps to a semantic color combo rooted in or adjacent to the design system palette.
+ */
+
+/* Bodybuilding */
+.landing-service-icon--bodybuilding { background: linear-gradient(135deg, #f97316, #dc2626); }
+/* Weight Loss */
+.landing-service-icon--weightloss   { background: linear-gradient(135deg, #ec4899, #e11d48); }
+/* Weight Gain */
+.landing-service-icon--weightgain   { background: linear-gradient(135deg, #a855f7, var(--primary)); }
+/* Cardio */
+.landing-service-icon--cardio       { background: linear-gradient(135deg, var(--success), #059669); }
+/* CrossFit */
+.landing-service-icon--crossfit     { background: linear-gradient(135deg, var(--warning), #f97316); }
+/* Yoga */
+.landing-service-icon--yoga         { background: linear-gradient(135deg, #60a5fa, #06b6d4); }
+/* Zumba */
+.landing-service-icon--zumba        { background: linear-gradient(135deg, #f472b6, #f43f5e); }
+/* Personal Training */
+.landing-service-icon--personaltraining { background: linear-gradient(135deg, #3b82f6, var(--primary)); }
+/* Diet Plan */
+.landing-service-icon--dietplan     { background: linear-gradient(135deg, #4ade80, #14b8a6); }
+
+/* ─── Trainer Avatar Gradients ────────────────────────────────────────────── */
+/* Replaces dynamic bg-gradient-to-br strings on trainer avatar circles */
+
+.landing-trainer-avatar--rk { background: linear-gradient(135deg, #fb923c, #ef4444); }
+.landing-trainer-avatar--ps { background: linear-gradient(135deg, #f472b6, #fb7185); }
+.landing-trainer-avatar--am { background: linear-gradient(135deg, #60a5fa, var(--primary)); }
+.landing-trainer-avatar--sr { background: linear-gradient(135deg, #4ade80, #34d399); }
+
+/* ─── About Section — Stat Card Gradients ─────────────────────────────────── */
+/* Replaces dynamic color strings in STATS_CARDS */
+
+.landing-stat-icon--members         { background: linear-gradient(135deg, var(--primary), #4f46e5); }
+.landing-stat-icon--trainers        { background: linear-gradient(135deg, #3b82f6, var(--primary)); }
+.landing-stat-icon--hours           { background: linear-gradient(135deg, var(--success), #059669); }
+.landing-stat-icon--transformations { background: linear-gradient(135deg, #ec4899, #fb7185); }
+
+/* ─── BMI Result Color Classes (Violation 6) ─────────────────────────────── */
+/*
+ * useLandingLogic.ts sets bmiResult.colorClass to one of these class names.
+ * These replace inline style `color: 'var(--info)'` etc. with proper Tailwind-mapped classes.
+ */
+.bmi-result--underweight { color: var(--info); }
+.bmi-result--normal      { color: var(--success); }
+.bmi-result--overweight  { color: var(--warning); }
+.bmi-result--obese       { color: var(--danger); }
+
+/* ─── Scroll-Into-View Animations ─────────────────────────────────────────── */
+
+@keyframes landing-fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-landing-fade-in-up {
+  animation: landing-fade-in-up 0.35s ease-out both;
+}
+
+/* ─── Navbar Backdrop on Scroll ───────────────────────────────────────────── */
+/* Extra blur shadow, applied by JS className toggle in LandingNavbar.tsx */
+.landing-navbar--scrolled {
+  background-color: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.6);
+}

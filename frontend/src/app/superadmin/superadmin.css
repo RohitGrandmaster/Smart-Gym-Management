@@ -1,0 +1,186 @@
+/*
+ * RESPONSIBILITY: Module-scoped CSS for the entire Superadmin SaaS panel.
+ * Defines custom scrollbar styles, micro-animation keyframes, and
+ * glassmorphism utility classes that are exclusive to this module.
+ *
+ * DO NOT add business logic or component-specific overrides here.
+ * Map new tokens in globals.css + tailwind.config.ts, then reference here.
+ *
+ * Loaded via: layout.tsx → SuperadminLayout.tsx
+ */
+
+/* ─── Custom Scrollbar (Design System §12.3) ─────────────────────────────── */
+/* Applies to all scroll containers within the .superadmin-module wrapper     */
+
+.superadmin-module ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.superadmin-module ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.superadmin-module ::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 999px;
+}
+
+.superadmin-module ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-disabled);
+}
+
+/* Firefox custom scrollbar */
+.superadmin-module * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* ─── Sidebar Nav Helper ─────────────────────────────────────────────────── */
+/* Used by SuperadminSidebar.tsx via className="custom-scrollbar"             */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 999px;
+}
+
+/* ─── Motion Accessibility (Design System §27 — WCAG 2.2) ───────────────── */
+/* Instantly disables all animations for users who request reduced motion.     */
+/* This is a legal requirement under WCAG 2.2 & European Accessibility Act.   */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Keyframe Animations ─────────────────────────────────────────────────── */
+/* Wrapped in no-preference guard so they only run when the user has NOT       */
+/* requested reduced motion. See Design System §27.                            */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Fade + slide in from bottom — used on modal entry, card reveal */
+  @keyframes superadmin-fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Fade in — used on overlay backdrops */
+  @keyframes superadmin-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* Slide in from right — used on drawers / confirmation panels */
+  @keyframes superadmin-slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Pulse glow — used on infrastructure node status indicators */
+  @keyframes superadmin-glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 6px rgba(99, 102, 241, 0);
+    }
+  }
+
+  /* Ghost Login Button Ripple — used on "Ghost Login as Tenant" action */
+  @keyframes superadmin-ripple {
+    0%   { transform: scale(0); opacity: 0.6; }
+    100% { transform: scale(4); opacity: 0; }
+  }
+}
+
+/* ─── Animation Utility Classes ───────────────────────────────────────────── */
+/* These classes reference the keyframes above. Because keyframes are guarded  */
+/* by no-preference media query, applying these on reduced-motion devices is   */
+/* harmless — the browser will simply not find the keyframe to run.            */
+
+.animate-superadmin-fade-in-up {
+  animation: superadmin-fade-in-up 0.25s ease-out both;  /* ≈ duration-slow */
+}
+
+.animate-superadmin-fade-in {
+  animation: superadmin-fade-in 0.2s ease-out both;      /* ≈ duration-base */
+}
+
+.animate-superadmin-slide-in-right {
+  animation: superadmin-slide-in-right 0.25s ease-out both; /* ≈ duration-slow */
+}
+
+.animate-superadmin-glow-pulse {
+  animation: superadmin-glow-pulse 2s ease-in-out infinite;
+}
+
+.ghost-login-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(99, 102, 241, 0.3);
+  animation: superadmin-ripple 0.5s linear forwards;  /* ≈ duration-xslow */
+  pointer-events: none;
+}
+
+/* ─── Status Dot Indicator ────────────────────────────────────────────────── */
+/* Used in infrastructure health tables and system health page                 */
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.status-dot--active  { background-color: var(--success); }
+.status-dot--warning { background-color: var(--warning); }
+.status-dot--danger  { background-color: var(--danger); }
+.status-dot--offline { background-color: var(--text-disabled); }
+
+/* ─── Table Row Hover Highlight ──────────────────────────────────────────── */
+/* Subtle primary-tinted (gold) row hover in all superadmin data tables       */
+/* Uses var(--primary) = #FACC15 gold per Design System §5b                  */
+
+.superadmin-table-row:hover {
+  background-color: rgba(250, 204, 21, 0.06);
+}
+
+/* ─── Print Styles (Design System §14) ──────────────────────────────────── */
+/* Hide the superadmin shell elements when printing invoices / receipts        */
+
+@media print {
+  .superadmin-module aside,
+  .superadmin-module header {
+    display: none !important;
+  }
+
+  .superadmin-module main {
+    margin-left: 0 !important;
+  }
+}

@@ -1,0 +1,109 @@
+/*
+ * RESPONSIBILITY: Module-scoped CSS for the Gyms (Tenants) sub-module.
+ * Defines table row hover effects, ghost-login animation, status badge
+ * micro-interactions, and gym-card elevation styles.
+ *
+ * DO NOT add global superadmin styles here — use superadmin.css instead.
+ * DO NOT add business logic or non-gyms component overrides.
+ *
+ * Loaded via: gyms/GymsClient.tsx or gyms/page.tsx import
+ */
+
+/* ─── Gym Table Row ───────────────────────────────────────────────────────── */
+/* Extends the base superadmin-table-row with a gyms-specific cursor & transition */
+
+.gyms-table-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.gyms-table-row:hover {
+  background-color: rgba(99, 102, 241, 0.06);
+}
+
+/* ─── Ghost Login Overlay ─────────────────────────────────────────────────── */
+/* Applied to the ghost-login button when initiating impersonation            */
+
+@keyframes gyms-ghost-flash {
+  0%   { opacity: 0.8; }
+  50%  { opacity: 0.3; }
+  100% { opacity: 0.8; }
+}
+
+.ghost-login-loading {
+  animation: gyms-ghost-flash 1s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ─── Status Badge Pill ───────────────────────────────────────────────────── */
+/* Tenant status badges for ACTIVE / SUSPENDED / TRIAL / CANCELLED            */
+
+.gym-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.gym-status-badge--active    { color: var(--success); background-color: var(--success-bg); }
+.gym-status-badge--suspended { color: var(--danger);  background-color: var(--danger-bg);  }
+.gym-status-badge--trial     { color: var(--warning); background-color: var(--warning-bg); }
+.gym-status-badge--cancelled { color: var(--text-secondary); background-color: #1E1E2E; }
+
+/* ─── Gym Onboarding Form Steps ──────────────────────────────────────────── */
+/* Used in AddGymForm.tsx multi-step wizard                                    */
+
+@keyframes gyms-step-reveal {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.gyms-step-content {
+  animation: gyms-step-reveal 0.2s ease-out both;
+}
+
+/* ─── Delete Modal Type-to-Confirm Input ─────────────────────────────────── */
+/* Red glow ring on the type-to-confirm input when the value is wrong         */
+
+.gym-delete-confirm-input:not(:placeholder-shown):invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+/* ─── Gym Stats Toolbar ───────────────────────────────────────────────────── */
+/* Stat pill badges in the GymsToolbar filter bar                              */
+
+.gyms-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background-color: var(--bg-card);
+  color: var(--text-secondary);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.gyms-stat-pill:hover {
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.gyms-stat-pill--active {
+  border-color: var(--primary);
+  background-color: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+}
